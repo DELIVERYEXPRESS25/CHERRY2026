@@ -2563,9 +2563,23 @@ def open_browser():
     time.sleep(2)
     webbrowser.open('http://127.0.0.1:5000')
 
+def check_updates_on_startup():
+    try:
+        from updater_v2 import check_and_update
+        print("Verificando actualizaciones...")
+        if check_and_update():
+            print("Aplicacion actualizada. Reiniciando...")
+            if getattr(sys, 'frozen', False):
+                os.execl(sys.executable, sys.executable, *sys.argv)
+            else:
+                os.execl(sys.executable, sys.executable, *sys.argv)
+    except Exception as e:
+        print(f"Error al verificar actualizaciones: {e}")
+
 if __name__ == '__main__':
     init_db()
     if getattr(sys, 'frozen', False):
+        check_updates_on_startup()
         browser_thread = threading.Thread(target=open_browser)
         browser_thread.daemon = True
         browser_thread.start()
