@@ -2548,12 +2548,18 @@ def init_db():
             print("Usuarios creados: admin/admin123 y cajero/cajero123")
 
 def open_browser():
+    import time
+    time.sleep(2)
     webbrowser.open('http://127.0.0.1:5000')
 
 if __name__ == '__main__':
     init_db()
     if getattr(sys, 'frozen', False):
-        threading.Timer(1.5, open_browser).start()
+        browser_thread = threading.Thread(target=open_browser)
+        browser_thread.daemon = True
+        browser_thread.start()
+        print("Iniciando Cherry Inventario...")
+        print("El navegador se abrira automaticamente...")
         app.run(host='127.0.0.1', port=5000, debug=False)
     else:
         app.run(debug=True, port=5000)
