@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Contabilidad - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-calculator"></i> Contabilidad</h1>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-arrow-up"></i></div><div class="stat-info"><h3>{{ format_currency(income) }}</h3><p>Ingresos del Mes</p></div></div>
+    <div class="stat-card"><div class="stat-icon red"><i class="fas fa-arrow-down"></i></div><div class="stat-info"><h3>{{ format_currency(expenses) }}</h3><p>Gastos del Mes</p></div></div>
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-balance-scale"></i></div><div class="stat-info"><h3>{{ format_currency(income - expenses) }}</h3><p>Balance del Mes</p></div></div>
+</div>
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Nuevo Movimiento</h3></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_transaction') }}" class="form">
+                <div class="form-row">
+                    <div class="form-group"><label>Tipo *</label>
+                        <select name="type" required>
+                            <option value="income">Ingreso</option>
+                            <option value="expense">Gasto</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Categoría</label>
+                        <select name="category">
+                            <option value="ventas">Ventas</option>
+                            <option value="compras">Compras</option>
+                            <option value="nómina">Nómina</option>
+                            <option value="alquiler">Alquiler</option>
+                            <option value="servicios">Servicios</option>
+                            <option value="impuestos">Impuestos</option>
+                            <option value="mantenimiento">Mantenimiento</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Monto (C$) *</label><input type="number" name="amount" step="0.01" min="0.01" required></div>
+                    <div class="form-group"><label>Método de Pago</label>
+                        <select name="payment_method">
+                            <option value="cash">Efectivo</option>
+                            <option value="card">Tarjeta</option>
+                            <option value="transfer">Transferencia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label>Descripción</label><input type="text" name="description" placeholder="Descripción del movimiento"></div>
+                <div class="form-group"><label>Referencia</label><input type="text" name="reference" placeholder="N° factura, recibo, etc."></div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Registrar</button>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-history"></i> Últimos Movimientos</h3></div>
+        <div class="card-body">
+            {% if transactions %}
+            <table class="data-table">
+                <thead><tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Descripción</th><th>Monto</th></tr></thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr>
+                        <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td><span class="badge badge-{% if t.type == 'income' %}success{% else %}danger{% endif %}">{{ 'Ingreso' if t.type == 'income' else 'Gasto' }}</span></td>
+                        <td>{{ t.category or '-' }}</td>
+                        <td>{{ t.description or '-' }}</td>
+                        <td class="{% if t.type == 'income' %}text-success{% else %}text-danger{% endif %}"><strong>{{ format_currency(t.amount) }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}<p class="no-data">No hay movimientos registrados</p>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

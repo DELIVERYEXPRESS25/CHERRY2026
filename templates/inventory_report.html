@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-warehouse"></i> Reporte de Inventario</h1>
+    <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir</button>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-boxes"></i></div><div class="stat-info"><h3>{{ products|length }}</h3><p>Total Productos</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>{{ format_currency(total_value) }}</h3><p>Valor de Compra</p></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-tags"></i></div><div class="stat-info"><h3>{{ format_currency(total_retail) }}</h3><p>Valor de Venta</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-percentage"></i></div><div class="stat-info"><h3>{{ format_currency(total_retail - total_value) }}</h3><p>Ganancia Potencial</p></div></div>
+</div>
+<div class="card"><div class="card-body">
+    <table class="data-table">
+        <thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Proveedor</th><th>Stock</th><th>Precio Compra</th><th>Precio Venta</th><th>Valor Stock</th></tr></thead>
+        <tbody>
+            {% for p in products %}
+            <tr class="{% if p.stock <= p.min_stock %}warning-row{% endif %}">
+                <td>{{ p.code }}</td>
+                <td>{{ p.name }}</td>
+                <td>{{ p.category or '-' }}</td>
+                <td>{{ p.supplier.name if p.supplier else '-' }}</td>
+                <td><span class="badge badge-{% if p.stock <= p.min_stock %}warning{% else %}success{% endif %}">{{ p.stock }}</span></td>
+                <td>{{ format_currency(p.purchase_price) }}</td>
+                <td>{{ format_currency(p.sale_price) }}</td>
+                <td>{{ format_currency(p.purchase_price * p.stock) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr><td colspan="6" class="text-right"><strong>TOTALES:</strong></td><td><strong>{{ format_currency(total_value) }}</strong></td><td><strong>{{ format_currency(total_retail) }}</strong></td></tr>
+        </tfoot>
+    </table>
+</div></div>
+{% endblock %}

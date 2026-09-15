@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibo Térmico - {{ invoice.invoice_number }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .receipt {
+            width: 280px;
+            background: white;
+            padding: 15px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo {
+            font-size: 10px;
+            color: #999;
+            border: 1px dashed #ddd;
+            padding: 5px;
+            margin-bottom: 8px;
+        }
+        
+        .business-name {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .business-info {
+            font-size: 10px;
+            color: #666;
+            margin: 3px 0;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 8px 0;
+            font-size: 10px;
+            color: #999;
+        }
+        
+        .invoice-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .invoice-info {
+            font-size: 11px;
+            margin: 5px 0;
+        }
+        
+        .invoice-info div {
+            margin: 2px 0;
+        }
+        
+        .customer {
+            font-size: 11px;
+            margin: 8px 0;
+        }
+        
+        .customer div {
+            margin: 2px 0;
+        }
+        
+        .items {
+            margin: 10px 0;
+        }
+        
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin: 4px 0;
+        }
+        
+        .item-name {
+            flex: 1;
+        }
+        
+        .item-qty {
+            width: 30px;
+            text-align: center;
+        }
+        
+        .item-price {
+            width: 70px;
+            text-align: right;
+        }
+        
+        .totals {
+            margin: 10px 0;
+            font-size: 11px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+        
+        .grand-total {
+            font-size: 14px;
+            font-weight: bold;
+            border-top: 1px dashed #333;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        
+        .payment-info {
+            font-size: 11px;
+            margin: 5px 0;
+        }
+        
+        .barcode {
+            text-align: center;
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin: 10px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 10px;
+            color: #666;
+        }
+        
+        .note {
+            text-align: center;
+            font-size: 10px;
+            font-style: italic;
+            margin-top: 5px;
+            color: #999;
+        }
+        
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        .print-btn:hover {
+            background: #c0392b;
+        }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .receipt { width: 100%; padding: 0; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">
+        <i class="fas fa-print"></i> Imprimir
+    </button>
+    
+    <div class="receipt">
+        {% if settings.show_logo %}
+        <div class="header">
+            <div class="logo">[ LOGO ]</div>
+        </div>
+        {% endif %}
+        
+        <div class="header">
+            <div class="business-name">{{ settings.business_name or 'Cherry Inventario' }}</div>
+            {% if settings.show_ruc and settings.business_ruc %}
+            <div class="business-info">RUC: {{ settings.business_ruc }}</div>
+            {% endif %}
+            {% if settings.show_address and settings.business_address %}
+            <div class="business-info">{{ settings.business_address }}</div>
+            {% endif %}
+            {% if settings.show_phone and settings.business_phone %}
+            <div class="business-info">Tel: {{ settings.business_phone }}</div>
+            {% endif %}
+            {% if settings.show_email and settings.business_email %}
+            <div class="business_info">{{ settings.business_email }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="divider">================================</div>
+        
+        <div class="invoice-title">FACTURA</div>
+        <div class="invoice-info">
+            <div>N°: {{ invoice.invoice_number }}</div>
+            <div>Fecha: {{ invoice.created_at.strftime('%d/%m/%Y') }}</div>
+            <div>Hora: {{ invoice.created_at.strftime('%H:%M:%S') }}</div>
+        </div>
+        
+        <div class="divider">--------------------------------</div>
+        
+        {% if settings.show_customer %}
+        <div class="customer">
+            <div><strong>Cliente:</strong> {{ invoice.customer.name if invoice.customer else 'Público General' }}</div>
+            {% if invoice.customer and invoice.customer.ruc %}
+            <div><strong>RUC:</strong> {{ invoice.customer.ruc }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if settings.show_cashier %}
+        <div class="customer">
+            <div><strong>Cajero:</strong> {{ invoice.user.full_name }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="divider">--------------------------------</div>
+        
+        <div class="items">
+            {% for item in invoice.items %}
+            <div class="item-row">
+                <span class="item-name">{{ item.product.name }}</span>
+                <span class="item-qty">{{ item.quantity }}x</span>
+                <span class="item-price">{{ format_currency(item.subtotal) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="divider">--------------------------------</div>
+        
+        <div class="totals">
+            {% if settings.show_tax_breakdown %}
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>{{ format_currency(invoice.subtotal) }}</span>
+            </div>
+            <div class="total-row">
+                <span>ISV ({{ settings.default_tax_rate }}%):</span>
+                <span>{{ format_currency(invoice.tax_amount) }}</span>
+            </div>
+            {% endif %}
+            <div class="total-row grand-total">
+                <span>TOTAL:</span>
+                <span>{{ format_currency(invoice.total) }}</span>
+            </div>
+        </div>
+        
+        <div class="divider">--------------------------------</div>
+        
+        {% if settings.show_payment_method %}
+        <div class="payment-info">
+            <strong>Pago:</strong>
+            {% if invoice.payment_method == 'cash' %}Efectivo
+            {% elif invoice.payment_method == 'card' %}Tarjeta
+            {% elif invoice.payment_method == 'transfer' %}Transferencia
+            {% else %}Crédito{% endif %}
+        </div>
+        {% endif %}
+        
+        {% if invoice.paid_amount and invoice.payment_method == 'cash' %}
+        <div class="payment-info">
+            <strong>Recibido:</strong> {{ format_currency(invoice.paid_amount) }}
+        </div>
+        <div class="payment-info">
+            <strong>Cambio:</strong> {{ format_currency(invoice.change_amount) }}
+        </div>
+        {% endif %}
+        
+        {% if settings.show_barcode %}
+        <div class="barcode">||||| {{ invoice.invoice_number }} |||||</div>
+        {% endif %}
+        
+        <div class="divider">================================</div>
+        
+        <div class="footer">{{ settings.invoice_footer or '¡Gracias por su compra!' }}</div>
+        
+        {% if settings.invoice_note %}
+        <div class="note">{{ settings.invoice_note }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>

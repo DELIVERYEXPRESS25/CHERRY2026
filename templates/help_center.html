@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Centro de Ayuda - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-question-circle"></i> Centro de Ayuda</h1>
+</div>
+<div class="help-grid">
+    <a href="{{ url_for('help_module', module='products') }}" class="help-card">
+        <div class="help-icon blue"><i class="fas fa-box"></i></div>
+        <h3>Productos</h3>
+        <p>Crear, editar, categorías, lotes, kits</p>
+    </a>
+    <a href="{{ url_for('help_module', module='invoices') }}" class="help-card">
+        <div class="help-icon green"><i class="fas fa-file-invoice-dollar"></i></div>
+        <h3>Facturación</h3>
+        <p>Crear facturas, pagos, ISV, imprimir</p>
+    </a>
+    <a href="{{ url_for('help_module', module='customers') }}" class="help-card">
+        <div class="help-icon purple"><i class="fas fa-users"></i></div>
+        <h3>Clientes</h3>
+        <p>Registro, crédito, puntos, VIP</p>
+    </a>
+    <a href="{{ url_for('help_module', module='cash') }}" class="help-card">
+        <div class="help-icon orange"><i class="fas fa-cash-register"></i></div>
+        <h3>Caja</h3>
+        <p>Abrir, cerrar, cuadrar, historial</p>
+    </a>
+    <a href="{{ url_for('help_module', module='reports') }}" class="help-card">
+        <div class="help-icon red"><i class="fas fa-chart-bar"></i></div>
+        <h3>Reportes</h3>
+        <p>Diario, ganancias, inventario, DGI</p>
+    </a>
+    <a href="{{ url_for('help_module', module='credits') }}" class="help-card">
+        <div class="help-icon blue"><i class="fas fa-calendar-alt"></i></div>
+        <h3>Crédito a Plazos</h3>
+        <p>Planes, cuotas, pagos</p>
+    </a>
+    <a href="{{ url_for('help_module', module='employees') }}" class="help-card">
+        <div class="help-icon green"><i class="fas fa-user-tie"></i></div>
+        <h3>Empleados</h3>
+        <p>Registro, comisiones, reportes</p>
+    </a>
+    <a href="{{ url_for('help_module', module='settings') }}" class="help-card">
+        <div class="help-icon purple"><i class="fas fa-cog"></i></div>
+        <h3>Configuración</h3>
+        <p>Datos negocio, facturas, WhatsApp</p>
+    </a>
+</div>
+<div class="help-grid" style="margin-top:20px">
+    <a href="{{ url_for('support_faq') }}" class="help-card help-wide">
+        <div class="help-icon orange"><i class="fas fa-comments"></i></div>
+        <h3>Preguntas Frecuentes</h3>
+        <p>Respuestas a las dudas más comunes</p>
+    </a>
+    <a href="{{ url_for('support_contact') }}" class="help-card help-wide">
+        <div class="help-icon red"><i class="fas fa-envelope"></i></div>
+        <h3>Contactar Soporte</h3>
+        <p>Enviar mensaje al equipo de soporte</p>
+    </a>
+</div>
+<style>
+.help-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+@media (max-width: 900px) { .help-grid { grid-template-columns: repeat(2, 1fr); } }
+.help-card { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 25px 15px; background: white; border-radius: 12px; border: 1px solid #e9ecef; text-decoration: none; color: #333; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.help-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: #007bff; }
+.help-card.help-wide { flex-direction: row; gap: 20px; text-align: left; padding: 20px 25px; }
+.help-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 15px; color: white; }
+.help-wide .help-icon { margin-bottom: 0; flex-shrink: 0; }
+.help-icon.blue { background: linear-gradient(135deg, #3498db, #2980b9); }
+.help-icon.green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+.help-icon.purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.help-icon.orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.help-icon.red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.help-card h3 { margin: 0 0 5px 0; font-size: 16px; }
+.help-card p { margin: 0; color: #666; font-size: 13px; }
+</style>
+{% endblock %}

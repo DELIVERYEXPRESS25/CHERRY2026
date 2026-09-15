@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-home"></i> Panel de Control</h1>
+    <a href="{{ url_for('generate_alerts') }}" class="btn btn-primary"><i class="fas fa-bell"></i> Generar Alertas</a>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-info"><h3>{{ total_products }}</h3><p>Productos</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-users"></i></div><div class="stat-info"><h3>{{ total_customers }}</h3><p>Clientes</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h3>{{ low_stock }}</h3><p>Stock Bajo</p></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-dollar-sign"></i></div><div class="stat-info"><h3>{{ format_currency(today_sales) }}</h3><p>Ventas Hoy</p></div></div>
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-calendar-alt"></i></div><div class="stat-info"><h3>{{ format_currency(month_sales) }}</h3><p>Ventas del Mes</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-credit-card"></i></div><div class="stat-info"><h3>{{ format_currency(pending_credits) }}</h3><p>Créditos Pendientes</p></div></div>
+</div>
+<div class="charts-grid">
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-chart-bar"></i> Ventas Mensuales (12 meses)</h3></div>
+        <div class="card-body"><canvas id="monthlyChart" height="200"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-chart-pie"></i> Productos Más Vendidos</h3></div>
+        <div class="card-body"><canvas id="topProductsChart" height="200"></canvas></div>
+    </div>
+</div>
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-clock"></i> Facturas Recientes</h3><a href="{{ url_for('invoices') }}" class="btn btn-sm">Ver todas</a></div>
+        <div class="card-body">
+            {% if recent_invoices %}
+            <table class="data-table">
+                <thead><tr><th>Factura</th><th>Cliente</th><th>Total</th><th>Fecha</th></tr></thead>
+                <tbody>
+                    {% for inv in recent_invoices %}
+                    <tr>
+                        <td><a href="{{ url_for('view_invoice', id=inv.id) }}">{{ inv.invoice_number }}</a></td>
+                        <td>{{ inv.customer.name if inv.customer else 'Público' }}</td>
+                        <td>{{ format_currency(inv.total) }}</td>
+                        <td>{{ inv.created_at.strftime('%d/%m %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}<p class="no-data">No hay facturas recientes</p>{% endif %}
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-exclamation-triangle"></i> Alertas</h3></div>
+        <div class="card-body">
+            {% if low_stock_products %}
+            <h4 style="color:#e74c3c;margin-bottom:10px"><i class="fas fa-box"></i> Stock Bajo</h4>
+            {% for p in low_stock_products %}
+            <div class="alert-item warning">
+                <span>{{ p.name }}</span>
+                <span class="badge badge-warning">{{ p.stock }}/{{ p.min_stock }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% if expiring_batches %}
+            <h4 style="color:#f39c12;margin:15px 0 10px"><i class="fas fa-clock"></i> Por Vencer</h4>
+            {% for b in expiring_batches %}
+            <div class="alert-item danger">
+                <span>{{ b.product.name }} - Lote {{ b.batch_number }}</span>
+                <span class="badge badge-danger">{{ b.expiry_date.strftime('%d/%m/%Y') }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% if not low_stock_products and not expiring_batches %}
+            <p class="no-data"><i class="fas fa-check-circle"></i> Todo en orden</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('/api/dashboard-data').then(r=>r.json()).then(data=>{
+    new Chart(document.getElementById('monthlyChart').getContext('2d'),{
+        type:'bar',
+        data:{
+            labels:data.last_12_months.map(d=>d.month),
+            datasets:[{
+                label:'Ventas (C$)',
+                data:data.last_12_months.map(d=>d.sales),
+                backgroundColor:'rgba(231,76,60,0.7)',
+                borderColor:'#e74c3c',
+                borderWidth:1,
+                borderRadius:5
+            }]
+        },
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'C$ '+v.toLocaleString()}}}}
+    });
+    if(data.top_products.length > 0){
+        const colors=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6'];
+        new Chart(document.getElementById('topProductsChart').getContext('2d'),{
+            type:'doughnut',
+            data:{
+                labels:data.top_products.map(p=>p.name),
+                datasets:[{data:data.top_products.map(p=>p.qty),backgroundColor:colors}]
+            },
+            options:{responsive:true,plugins:{legend:{position:'right'}}}
+        });
+    }
+});
+</script>
+{% endblock %}

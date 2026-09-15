@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Órdenes de Compra - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-shopping-cart"></i> Órdenes de Compra</h1>
+    <a href="{{ url_for('new_purchase_order') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Nueva Orden</a>
+</div>
+<div class="card"><div class="card-body">
+    {% if orders %}
+    <table class="data-table">
+        <thead><tr><th>N° Orden</th><th>Proveedor</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+        <tbody>
+            {% for o in orders %}
+            <tr class="{% if o.status == 'received' %}text-success{% endif %}">
+                <td><a href="{{ url_for('purchase_order_detail', id=o.id) }}">{{ o.order_number }}</a></td>
+                <td>{{ o.supplier.name }}</td>
+                <td>{{ format_currency(o.total) }}</td>
+                <td><span class="badge badge-{% if o.status == 'received' %}success{% else %}warning{% endif %}">{{ 'Recibida' if o.status == 'received' else 'Pendiente' }}</span></td>
+                <td>{{ o.created_at.strftime('%d/%m/%Y') }}</td>
+                <td><a href="{{ url_for('purchase_order_detail', id=o.id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay órdenes de compra</p>{% endif %}
+</div></div>
+{% endblock %}

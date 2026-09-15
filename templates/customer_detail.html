@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Detalle Cliente - {{ customer.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-user"></i> {{ customer.name }}</h1>
+    <div>
+        <a href="{{ url_for('edit_customer', id=customer.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Editar</a>
+        <a href="{{ url_for('customers') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-star"></i></div><div class="stat-info"><h3>{{ customer.loyalty_points }}</h3><p>Puntos</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-credit-card"></i></div><div class="stat-info"><h3>{{ format_currency(customer.current_credit) }}</h3><p>Crédito Usado</p></div></div>
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>{{ format_currency(customer.credit_limit) }}</h3><p>Límite de Crédito</p></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-file-invoice"></i></div><div class="stat-info"><h3>{{ invoices|length }}</h3><p>Facturas</p></div></div>
+</div>
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-info-circle"></i> Información</h3></div>
+        <div class="card-body">
+            <p><strong>Email:</strong> {{ customer.email or '-' }}</p>
+            <p><strong>Teléfono:</strong> {{ customer.phone or '-' }}</p>
+            <p><strong>RUC:</strong> {{ customer.ruc or '-' }}</p>
+            <p><strong>Dirección:</strong> {{ customer.address or '-' }}</p>
+            <p><strong>VIP:</strong> {% if customer.is_vip %}<span class="badge badge-warning">SÍ</span>{% else %}No{% endif %}</p>
+            <p><strong>Cliente desde:</strong> {{ customer.created_at.strftime('%d/%m/%Y') }}</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Agregar Crédito</h3></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_customer_credit', id=customer.id) }}">
+                <div class="form-group"><label>Monto (C$)</label><input type="number" name="amount" step="0.01" min="0.01" required></div>
+                <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Agregar Crédito</button>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="card"><div class="card-header"><h3><i class="fas fa-history"></i> Historial de Compras</h3></div><div class="card-body">
+    {% if invoices %}
+    <table class="data-table">
+        <thead><tr><th>N° Factura</th><th>Total</th><th>Pagado</th><th>Estado</th><th>Fecha</th></tr></thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td><a href="{{ url_for('view_invoice', id=inv.id) }}">{{ inv.invoice_number }}</a></td>
+                <td>{{ format_currency(inv.total) }}</td>
+                <td>{{ format_currency(inv.paid_amount) }}</td>
+                <td><span class="badge badge-{% if inv.status == 'completed' %}success{% elif inv.status == 'cancelled' %}danger{% else %}warning{% endif %}">{{ inv.status }}</span></td>
+                <td>{{ inv.created_at.strftime('%d/%m/%Y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay compras registradas</p>{% endif %}
+</div></div>
+{% endblock %}

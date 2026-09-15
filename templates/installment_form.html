@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Plan de Cuotas - Factura {{ invoice.invoice_number }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-calendar-plus"></i> Nuevo Plan de Cuotas</h1>
+    <a href="{{ url_for('view_invoice', id=invoice.id) }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="card"><div class="card-body">
+    <div class="receipt-header">
+        <h3>Factura: {{ invoice.invoice_number }}</h3>
+        <p>Cliente: {{ invoice.customer.name if invoice.customer else 'Público' }}</p>
+        <p><strong>Total: {{ format_currency(invoice.total) }}</strong></p>
+    </div>
+    <form method="POST" class="form" style="max-width:500px">
+        <div class="form-group"><label>Número de Cuotas *</label><input type="number" name="num_installments" min="2" max="36" value="6" required></div>
+        <div class="form-group"><label>Frecuencia</label>
+            <select name="frequency">
+                <option value="weekly">Semanal</option>
+                <option value="biweekly">Quincenal</option>
+                <option value="monthly" selected>Mensual</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Fecha de Inicio</label><input type="date" name="start_date" value="{{ invoice.created_at.strftime('%Y-%m-%d') }}"></div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Crear Plan</button>
+            <a href="{{ url_for('view_invoice', id=invoice.id) }}" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div></div>
+{% endblock %}

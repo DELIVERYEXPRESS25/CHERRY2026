@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Configuración - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-cog"></i> Configuración del Sistema</h1>
+</div>
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-file-invoice"></i> Configuración de Facturas</h3></div>
+        <div class="card-body">
+            <p>Personaliza el diseño y formato de tus facturas (80mm térmico, carta, etc.)</p>
+            <br>
+            <a href="{{ url_for('invoice_settings') }}" class="btn btn-primary"><i class="fas fa-cog"></i> Configurar Facturas</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-database"></i> Respaldo de Base de Datos</h3></div>
+        <div class="card-body">
+            <p>Crea una copia de seguridad de toda tu información.</p>
+            <br>
+            <a href="{{ url_for('backup_database') }}" class="btn btn-success" onclick="return confirm('¿Crear respaldo?')"><i class="fas fa-download"></i> Crear Respaldo</a>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header"><h3><i class="fas fa-info-circle"></i> Información del Sistema</h3></div>
+    <div class="card-body">
+        <p><strong>Versión:</strong> 2.0.0</p>
+        <p><strong>Base de datos:</strong> SQLite</p>
+        <p><strong>Moneda:</strong> Córdoba Nicaragüense (C$)</p>
+        <p><strong>ISV:</strong> 15%</p>
+    </div>
+</div>
+{% endblock %}

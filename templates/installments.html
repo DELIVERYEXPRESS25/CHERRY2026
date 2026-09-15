@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Crédito a Plazos - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-calendar-alt"></i> Crédito a Plazos</h1>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-file-alt"></i></div><div class="stat-info"><h3>{{ plans|selectattr('status', 'equalto', 'active')|list|length }}</h3><p>Planes Activos</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h3>{{ plans|selectattr('status', 'equalto', 'completed')|list|length }}</h3><p>Completados</p></div></div>
+</div>
+<div class="card"><div class="card-body">
+    {% if plans %}
+    <table class="data-table">
+        <thead><tr><th>Factura</th><th>Cliente</th><th>Total</th><th>Pagado</th><th>Pendiente</th><th>Cuotas</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+            {% for p in plans %}
+            <tr class="{% if p.status == 'completed' %}text-success{% endif %}">
+                <td>{{ p.invoice.invoice_number if p.invoice else '-' }}</td>
+                <td>{{ p.customer.name if p.customer else '-' }}</td>
+                <td>{{ format_currency(p.total_amount) }}</td>
+                <td>{{ format_currency(p.paid_amount) }}</td>
+                <td><strong>{{ format_currency(p.remaining_amount) }}</strong></td>
+                <td>{{ p.payments|length }}/{{ p.num_installments }}</td>
+                <td><span class="badge badge-{% if p.status == 'active' %}warning{% else %}success{% endif %}">{{ 'Activo' if p.status == 'active' else 'Completado' }}</span></td>
+                <td><a href="{{ url_for('view_installment', id=p.id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay planes de crédito a plazos</p>{% endif %}
+</div></div>
+{% endblock %}

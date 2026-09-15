@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Proveedor - {{ supplier.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-truck"></i> {{ supplier.name }}</h1>
+    <div>
+        <a href="{{ url_for('edit_supplier', id=supplier.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Editar</a>
+        <a href="{{ url_for('suppliers') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>{{ format_currency(supplier.balance) }}</h3><p>Saldo Pendiente</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-shopping-cart"></i></div><div class="stat-info"><h3>{{ orders|length }}</h3><p>Órdenes de Compra</p></div></div>
+</div>
+<div class="card"><div class="card-header"><h3><i class="fas fa-info-circle"></i> Información</h3></div><div class="card-body">
+    <p><strong>Contacto:</strong> {{ supplier.contact_name or '-' }}</p>
+    <p><strong>Email:</strong> {{ supplier.email or '-' }}</p>
+    <p><strong>Teléfono:</strong> {{ supplier.phone or '-' }}</p>
+    <p><strong>RUC:</strong> {{ supplier.ruc or '-' }}</p>
+    <p><strong>Dirección:</strong> {{ supplier.address or '-' }}</p>
+</div></div>
+<div class="card"><div class="card-header"><h3><i class="fas fa-history"></i> Órdenes de Compra</h3></div><div class="card-body">
+    {% if orders %}
+    <table class="data-table">
+        <thead><tr><th>N° Orden</th><th>Total</th><th>Estado</th><th>Fecha</th></tr></thead>
+        <tbody>
+            {% for o in orders %}
+            <tr>
+                <td><a href="{{ url_for('purchase_order_detail', id=o.id) }}">{{ o.order_number }}</a></td>
+                <td>{{ format_currency(o.total) }}</td>
+                <td><span class="badge badge-{% if o.status == 'received' %}success{% else %}warning{% endif %}">{{ o.status }}</span></td>
+                <td>{{ o.created_at.strftime('%d/%m/%Y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay órdenes</p>{% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{
+    "version": "1.0.0",
+    "release_date": "2026-09-14",
+    "description": "Versión inicial del sistema Cherry Inventario",
+    "download_url": "https://tudominio.com/updates/CherryInventario_1.0.0.zip",
+    "hash": "",
+    "mandatory": false,
+    "changelog": [
+        "Sistema de inventario completo",
+        "Facturación con ISV",
+        "POS táctil",
+        "Módulo de clientes y proveedores",
+        "Reportes y exportación"
+    ]
+}

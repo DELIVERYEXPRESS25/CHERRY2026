@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ guide.title }} - Ayuda{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="{{ guide.icon }}"></i> {{ guide.title }}</h1>
+    <a href="{{ url_for('help_center') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="guide-content">
+    {% for section in guide.sections %}
+    <div class="guide-section">
+        <h3><span class="guide-number">{{ loop.index }}</span> {{ section.title }}</h3>
+        <p>{{ section.content }}</p>
+    </div>
+    {% endfor %}
+</div>
+<div class="guide-nav">
+    {% set modules = ['products', 'invoices', 'customers', 'cash', 'reports', 'credits', 'employees', 'settings'] %}
+    {% set idx = modules.index(module) %}
+    {% if idx > 0 %}
+    <a href="{{ url_for('help_module', module=modules[idx-1]) }}" class="btn"><i class="fas fa-arrow-left"></i> Anterior</a>
+    {% endif %}
+    <a href="{{ url_for('help_center') }}" class="btn">Índice</a>
+    {% if idx < modules|length - 1 %}
+    <a href="{{ url_for('help_module', module=modules[idx+1]) }}" class="btn">Siguiente <i class="fas fa-arrow-right"></i></a>
+    {% endif %}
+</div>
+<style>
+.guide-content { max-width: 800px; }
+.guide-section { background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #e9ecef; }
+.guide-section h3 { margin: 0 0 10px 0; display: flex; align-items: center; gap: 12px; }
+.guide-number { background: #e74c3c; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.guide-section p { margin: 0; color: #555; line-height: 1.6; }
+.guide-nav { display: flex; gap: 10px; margin-top: 20px; }
+</style>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes - Cherry Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-chart-bar"></i> Reportes</h1>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-info">
+            <h3>{{ format_currency(daily_sales) }}</h3>
+            <p>Ventas Hoy</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-info">
+            <h3>{{ format_currency(monthly_sales) }}</h3>
+            <p>Ventas del Mes</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-calendar"></i></div>
+        <div class="stat-info">
+            <h3>{{ format_currency(yearly_sales) }}</h3>
+            <p>Ventas del Año</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-file-alt"></i></div>
+        <div class="stat-info">
+            <h3>{{ daily_invoices }}</h3>
+            <p>Facturas Hoy</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-trophy"></i> Productos Más Vendidos</h3>
+        </div>
+        <div class="card-body">
+            {% if top_products %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Unidades Vendidas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in top_products %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ product[0] }}</td>
+                        <td><span class="badge badge-success">{{ product[1] }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No hay datos de ventas disponibles</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-pie"></i> Resumen Mensual</h3>
+        </div>
+        <div class="card-body">
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <span class="label">Total Facturas:</span>
+                    <span class="value">{{ monthly_invoices }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Promedio por Factura:</span>
+                    <span class="value">{{ format_currency(monthly_sales / monthly_invoices if monthly_invoices > 0 else 0) }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Ventas Totales:</span>
+                    <span class="value">{{ format_currency(monthly_sales) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

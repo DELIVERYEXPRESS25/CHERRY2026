@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Kit/Combo - {{ product.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-puzzle-piece"></i> Kit/Combo - {{ product.name }}</h1>
+    <a href="{{ url_for('products') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-info"><h3>{{ product.stock }}</h3><p>Unidades Disponibles</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-puzzle-piece"></i></div><div class="stat-info"><h3>{{ kit_items|length }}</h3><p>Componentes</p></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-dollar-sign"></i></div><div class="stat-info"><h3>{{ format_currency(product.sale_price) }}</h3><p>Precio de Venta</p></div></div>
+</div>
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Agregar Componente</h3></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_kit_component', id=product.id) }}" class="form">
+                <div class="form-group">
+                    <label>Producto *</label>
+                    <select name="component_id" required>
+                        <option value="">Seleccione producto</option>
+                        {% for p in all_products if p.id != product.id %}
+                        <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.stock }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cantidad *</label>
+                    <input type="number" name="quantity" min="1" value="1" required>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar</button>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-list"></i> Componentes del Kit</h3></div>
+        <div class="card-body">
+            {% if kit_items %}
+            <table class="data-table">
+                <thead><tr><th>Producto</th><th>Cantidad Necesaria</th><th>Stock Disponible</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    {% for item in kit_items %}
+                    <tr class="{% if item.component.stock < item.quantity %}warning-row{% endif %}">
+                        <td>{{ item.component.name }}</td>
+                        <td><strong>{{ item.quantity }}</strong></td>
+                        <td><span class="badge badge-{% if item.component.stock >= item.quantity %}success{% else %}danger{% endif %}">{{ item.component.stock }}</span></td>
+                        <td><a href="{{ url_for('remove_kit_component', kit_id=item.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Remover?')"><i class="fas fa-trash"></i></a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}<p class="no-data">No hay componentes definidos</p>{% endif %}
+        </div>
+    </div>
+</div>
+{% if kit_items %}
+<div class="card">
+    <div class="card-header"><h3><i class="fas fa-cogs"></i> Construir Kit</h3></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('build_kit', id=product.id) }}" style="display:flex;gap:15px;align-items:flex-end">
+            <div class="form-group" style="margin:0">
+                <label>Cantidad a construir</label>
+                <input type="number" name="quantity" min="1" value="1">
+            </div>
+            <button type="submit" class="btn btn-success" onclick="return confirm('¿Construir kit? Se descontarán los componentes.')">
+                <i class="fas fa-hammer"></i> Construir Kit
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

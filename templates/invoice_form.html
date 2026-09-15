@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Factura - Cherry Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-file-invoice-dollar"></i> Nueva Factura</h1>
+    <a href="{{ url_for('invoices') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" id="invoiceForm" class="form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customer_id">Cliente *</label>
+                    <select id="customer_id" name="customer_id" required>
+                        <option value="">Seleccione un cliente</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }} {% if customer.ruc %}({{ customer.ruc }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="payment_method">Método de Pago</label>
+                    <select id="payment_method" name="payment_method">
+                        <option value="cash">Efectivo</option>
+                        <option value="card">Tarjeta</option>
+                        <option value="transfer">Transferencia</option>
+                        <option value="credit">Crédito</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Agregar Productos</label>
+                <div class="product-search">
+                    <input type="text" id="productSearch" placeholder="Buscar producto por nombre o código...">
+                    <div id="productResults" class="search-results"></div>
+                </div>
+            </div>
+
+            <div class="invoice-items">
+                <table class="data-table" id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                    </tbody>
+                </table>
+                <p id="noItems" class="no-data">Agregue productos a la factura</p>
+            </div>
+
+            <div class="invoice-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">C$ 0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>ISV (15%):</span>
+                    <span id="tax">C$ 0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="total">C$ 0.00</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notas</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="Observaciones..."></textarea>
+            </div>
+
+            <input type="hidden" id="itemsJson" name="items" value="[]">
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-save"></i> Crear Factura
+                </button>
+                <a href="{{ url_for('invoices') }}" class="btn">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const products = {{ products | tojson }};
+let invoiceItems = [];
+
+document.getElementById('productSearch').addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase();
+    const results = document.getElementById('productResults');
+    results.innerHTML = '';
+    
+    if (query.length < 2) {
+        results.style.display = 'none';
+        return;
+    }
+
+    const matches = products.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.code.toLowerCase().includes(query)
+    ).slice(0, 5);
+
+    if (matches.length > 0) {
+        results.style.display = 'block';
+        matches.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `<strong>${p.code}</strong> - ${p.name} <span>C$ ${p.sale_price.toFixed(2)}</span> (Stock: ${p.stock})`;
+            div.onclick = () => addProduct(p);
+            results.appendChild(div);
+        });
+    } else {
+        results.style.display = 'none';
+    }
+});
+
+function addProduct(product) {
+    const existing = invoiceItems.find(i => i.product_id === product.id);
+    if (existing) {
+        if (existing.quantity < product.stock) {
+            existing.quantity++;
+        } else {
+            alert('No hay suficiente stock');
+            return;
+        }
+    } else {
+        invoiceItems.push({
+            product_id: product.id,
+            code: product.code,
+            name: product.name,
+            price: product.sale_price,
+            quantity: 1,
+            stock: product.stock
+        });
+    }
+    updateTable();
+    document.getElementById('productSearch').value = '';
+    document.getElementById('productResults').style.display = 'none';
+}
+
+function removeProduct(index) {
+    invoiceItems.splice(index, 1);
+    updateTable();
+}
+
+function updateQuantity(index, change) {
+    const item = invoiceItems[index];
+    const newQty = item.quantity + change;
+    if (newQty > 0 && newQty <= item.stock) {
+        item.quantity = newQty;
+        updateTable();
+    }
+}
+
+function updateTable() {
+    const tbody = document.getElementById('itemsBody');
+    const noItems = document.getElementById('noItems');
+    
+    if (invoiceItems.length === 0) {
+        tbody.innerHTML = '';
+        noItems.style.display = 'block';
+        document.getElementById('itemsTable').style.display = 'none';
+    } else {
+        noItems.style.display = 'none';
+        document.getElementById('itemsTable').style.display = 'table';
+        tbody.innerHTML = invoiceItems.map((item, i) => `
+            <tr>
+                <td>${item.code}</td>
+                <td>${item.name}</td>
+                <td>C$ ${item.price.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm" onclick="updateQuantity(${i}, -1)">-</button>
+                    <span>${item.quantity}</span>
+                    <button type="button" class="btn btn-sm" onclick="updateQuantity(${i}, 1)">+</button>
+                </td>
+                <td>C$ ${(item.price * item.quantity).toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeProduct(${i})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    const subtotal = invoiceItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.15;
+    const total = subtotal + tax;
+
+    document.getElementById('subtotal').textContent = `C$ ${subtotal.toFixed(2)}`;
+    document.getElementById('tax').textContent = `C$ ${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = `C$ ${total.toFixed(2)}`;
+    document.getElementById('itemsJson').value = JSON.stringify(invoiceItems.map(i => ({
+        product_id: i.product_id,
+        quantity: i.quantity
+    })));
+}
+
+document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+    if (invoiceItems.length === 0) {
+        e.preventDefault();
+        alert('Agregue al menos un producto');
+    }
+});
+</script>
+{% endblock %}

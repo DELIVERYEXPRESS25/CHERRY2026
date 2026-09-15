@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte Diario - Cherry Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-calendar-day"></i> Reporte Diario</h1>
+    <div>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+        <a href="{{ url_for('reports') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+</div>
+
+<div class="report-date">
+    <h2>{{ report_date.strftime('%d de %B de %Y') }}</h2>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div>
+        <div class="stat-info">
+            <h3>{{ format_currency(total_sales) }}</h3>
+            <p>Ventas Totales</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-receipt"></i></div>
+        <div class="stat-info">
+            <h3>{{ sales|length }}</h3>
+            <p>Facturas Emitidas</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-info">
+            <h3>{{ format_currency(cash_sales) }}</h3>
+            <p>Ventas en Efectivo</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-credit-card"></i></div>
+        <div class="stat-info">
+            <h3>{{ format_currency(card_sales) }}</h3>
+            <p>Ventas con Tarjeta</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-pie"></i> Resumen por Método de Pago</h3>
+        </div>
+        <div class="card-body">
+            <div class="payment-summary">
+                <div class="payment-item">
+                    <div class="payment-icon cash">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="payment-info">
+                        <span class="payment-label">Efectivo</span>
+                        <span class="payment-amount">{{ format_currency(cash_sales) }}</span>
+                        <span class="payment-percent">
+                            {% if total_sales > 0 %}
+                            {{ "%.1f"|format((cash_sales / total_sales) * 100) }}%
+                            {% else %}0%{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="payment-item">
+                    <div class="payment-icon card">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="payment-info">
+                        <span class="payment-label">Tarjeta</span>
+                        <span class="payment-amount">{{ format_currency(card_sales) }}</span>
+                        <span class="payment-percent">
+                            {% if total_sales > 0 %}
+                            {{ "%.1f"|format((card_sales / total_sales) * 100) }}%
+                            {% else %}0%{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="payment-item">
+                    <div class="payment-icon credit">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <div class="payment-info">
+                        <span class="payment-label">Crédito</span>
+                        <span class="payment-amount">{{ format_currency(credit_sales) }}</span>
+                        <span class="payment-percent">
+                            {% if total_sales > 0 %}
+                            {{ "%.1f"|format((credit_sales / total_sales) * 100) }}%
+                            {% else %}0%{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-box"></i> Productos Vendidos</h3>
+        </div>
+        <div class="card-body">
+            {% if product_sales %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in product_sales %}
+                    <tr>
+                        <td>{{ product[0] }}</td>
+                        <td><span class="badge badge-success">{{ product[1] }}</span></td>
+                        <td>{{ format_currency(product[2]) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No hay ventas registradas hoy</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Detalle de Ventas</h3>
+    </div>
+    <div class="card-body">
+        {% if sales %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>N° Factura</th>
+                    <th>Cliente</th>
+                    <th>Método</th>
+                    <th>Subtotal</th>
+                    <th>ISV</th>
+                    <th>Total</th>
+                    <th>Hora</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td><a href="{{ url_for('view_invoice', id=sale.id) }}">{{ sale.invoice_number }}</a></td>
+                    <td>{{ sale.customer.name if sale.customer else 'Público General' }}</td>
+                    <td>
+                        {% if sale.payment_method == 'cash' %}
+                        <span class="badge badge-success">Efectivo</span>
+                        {% elif sale.payment_method == 'card' %}
+                        <span class="badge badge-info">Tarjeta</span>
+                        {% elif sale.payment_method == 'transfer' %}
+                        <span class="badge badge-warning">Transferencia</span>
+                        {% else %}
+                        <span class="badge badge-danger">Crédito</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ format_currency(sale.subtotal) }}</td>
+                    <td>{{ format_currency(sale.tax_amount) }}</td>
+                    <td><strong>{{ format_currency(sale.total) }}</strong></td>
+                    <td>{{ sale.created_at.strftime('%H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>TOTALES</strong></td>
+                    <td><strong>{{ format_currency(sales|sum(attribute='subtotal')) }}</strong></td>
+                    <td><strong>{{ format_currency(sales|sum(attribute='tax_amount')) }}</strong></td>
+                    <td><strong>{{ format_currency(total_sales) }}</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+        <p class="no-data">No hay ventas registradas hoy</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

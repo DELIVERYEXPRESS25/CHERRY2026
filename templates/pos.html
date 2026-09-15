@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS - Cherry Inventario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="pos-body">
+    <div class="pos-container">
+        <!-- Left Panel - Products -->
+        <div class="pos-products">
+            <div class="pos-header">
+                <a href="{{ url_for('dashboard') }}" class="pos-back-btn" title="Volver alInicio">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="pos-logo">
+                    <i class="fas fa-cherry"></i>
+                    <span>Cherry POS</span>
+                </div>
+                <div class="pos-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="posSearch" placeholder="Buscar producto o escanear código..." autofocus>
+                </div>
+                <div class="pos-actions">
+                    <button class="btn-pos" onclick="showCategory('all')"><i class="fas fa-th"></i> Todos</button>
+                    <button class="btn-pos" onclick="showCategory('favoritos')"><i class="fas fa-star"></i> Favoritos</button>
+                </div>
+            </div>
+
+            <div class="pos-categories" id="posCategories">
+                <button class="category-btn active" onclick="filterByCategory('all')">Todos</button>
+                {% for cat in categories %}
+                <button class="category-btn" onclick="filterByCategory('{{ cat }}')">{{ cat }}</button>
+                {% endfor %}
+            </div>
+
+            <div class="pos-products-grid" id="posProductsGrid">
+                {% for product in products %}
+                <div class="pos-product-card" 
+                     data-id="{{ product.id }}" 
+                     data-code="{{ product.code }}"
+                     data-name="{{ product.name }}" 
+                     data-price="{{ product.sale_price }}"
+                     data-stock="{{ product.stock }}"
+                     data-category="{{ product.category or '' }}"
+                     onclick="addToCart(this)">
+                    <div class="product-image">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="product-info">
+                        <span class="product-name">{{ product.name }}</span>
+                        <span class="product-code">{{ product.code }}</span>
+                        <span class="product-price">C$ {{ "%.2f"|format(product.sale_price) }}</span>
+                        <span class="product-stock {% if product.stock <= product.min_stock %}low-stock{% endif %}">
+                            Stock: {{ product.stock }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Panel - Cart -->
+        <div class="pos-cart">
+            <div class="cart-header">
+                <h3><i class="fas fa-shopping-cart"></i> Carrito</h3>
+                <button class="btn-clear-cart" onclick="clearCart()">
+                    <i class="fas fa-trash"></i> Limpiar
+                </button>
+            </div>
+
+            <div class="cart-customer">
+                <label>Cliente:</label>
+                <select id="cartCustomer">
+                    <option value="">Público General</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn-icon" onclick="quickAddCustomer()" title="Agregar cliente rápido">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <div class="cart-items" id="cartItems">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-basket"></i>
+                    <p>Agregue productos</p>
+                </div>
+            </div>
+
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="cartSubtotal">C$ 0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>ISV (15%):</span>
+                    <span id="cartTax">C$ 0.00</span>
+                </div>
+                <div class="summary-row discount-row">
+                    <span>Descuento:</span>
+                    <div class="discount-input">
+                        <input type="number" id="discountPercent" min="0" max="100" value="0" onchange="updateCart()">
+                        <span>%</span>
+                    </div>
+                </div>
+                <div class="summary-row discount-amount">
+                    <span>Descuento:</span>
+                    <span id="cartDiscount">- C$ 0.00</span>
+                </div>
+                <div class="summary-row total-row">
+                    <span>TOTAL:</span>
+                    <span id="cartTotal">C$ 0.00</span>
+                </div>
+            </div>
+
+            <div class="cart-payment">
+                <div class="payment-methods">
+                    <button class="payment-btn active" data-method="cash" onclick="selectPayment('cash')">
+                        <i class="fas fa-money-bill-wave"></i> Efectivo
+                    </button>
+                    <button class="payment-btn" data-method="card" onclick="selectPayment('card')">
+                        <i class="fas fa-credit-card"></i> Tarjeta
+                    </button>
+                    <button class="payment-btn" data-method="transfer" onclick="selectPayment('transfer')">
+                        <i class="fas fa-university"></i> Transferencia
+                    </button>
+                    <button class="payment-btn" data-method="credit" onclick="selectPayment('credit')">
+                        <i class="fas fa-file-invoice"></i> Crédito
+                    </button>
+                </div>
+
+                <div class="cash-input" id="cashInput">
+                    <label>Efectivo recibido:</label>
+                    <input type="number" id="cashReceived" min="0" step="0.01" placeholder="0.00" onkeyup="calculateChange()">
+                    <div class="change-amount">
+                        <span>Cambio:</span>
+                        <span id="changeAmount">C$ 0.00</span>
+                    </div>
+                </div>
+
+                <button class="btn-complete-sale" id="completeSale" onclick="completeSale()">
+                    <i class="fas fa-check-circle"></i> Completar Venta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Customer Modal -->
+    <div class="modal" id="quickCustomerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Agregar Cliente Rápido</h3>
+                <button class="modal-close" onclick="closeModal('quickCustomerModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" id="quickCustomerName" required>
+                </div>
+                <div class="form-group">
+                    <label>RUC/Cédula</label>
+                    <input type="text" id="quickCustomerRuc">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="tel" id="quickCustomerPhone">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveQuickCustomer()">Guardar</button>
+                <button class="btn" onclick="closeModal('quickCustomerModal')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discount Modal -->
+    <div class="modal" id="discountModal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3><i class="fas fa-percentage"></i> Aplicar Descuento</h3>
+                <button class="modal-close" onclick="closeModal('discountModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Porcentaje de descuento</label>
+                    <input type="number" id="modalDiscount" min="0" max="100" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="applyDiscount()">Aplicar</button>
+                <button class="btn" onclick="closeModal('discountModal')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sale Summary Modal -->
+    <div class="modal" id="saleSummaryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Venta Completada</h3>
+            </div>
+            <div class="modal-body sale-summary">
+                <div class="summary-icon success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="summary-details">
+                    <p><strong>Factura:</strong> <span id="summaryInvoice">-</span></p>
+                    <p><strong>Total:</strong> <span id="summaryTotal">C$ 0.00</span></p>
+                    <p><strong>Pagado:</strong> <span id="summaryPaid">C$ 0.00</span></p>
+                    <p><strong>Cambio:</strong> <span id="summaryChange">C$ 0.00</span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="printReceipt()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+                <button class="btn" onclick="newSale()">Nueva Venta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Help -->
+    <div class="pos-shortcuts" id="shortcutsHelp">
+        <div class="shortcut-title">
+            <i class="fas fa-keyboard"></i> Atajos de Teclado
+        </div>
+        <div class="shortcut-item"><kbd>F2</kbd> Buscar producto</div>
+        <div class="shortcut-item"><kbd>F4</kbd> Aplicar descuento</div>
+        <div class="shortcut-item"><kbd>F9</kbd> Completar venta</div>
+        <div class="shortcut-item"><kbd>F12</kbd> Nuevo cliente</div>
+        <div class="shortcut-item"><kbd>Esc</kbd> Cancelar/Limpiar</div>
+    </div>
+
+    <script>
+        const products = {{ products | tojson }};
+        let cart = [];
+        let currentPayment = 'cash';
+        let currentSaleId = null;
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                document.getElementById('posSearch').focus();
+            } else if (e.key === 'F4') {
+                e.preventDefault();
+                showDiscountModal();
+            } else if (e.key === 'F9') {
+                e.preventDefault();
+                completeSale();
+            } else if (e.key === 'F12') {
+                e.preventDefault();
+                quickAddCustomer();
+            } else if (e.key === 'Escape') {
+                clearCart();
+            }
+        });
+
+        // Search products
+        document.getElementById('posSearch').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.pos-product-card');
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const code = card.dataset.code.toLowerCase();
+                if (name.includes(query) || code.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Filter by category
+        function filterByCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const cards = document.querySelectorAll('.pos-product-card');
+            cards.forEach(card => {
+                if (category === 'all') {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = card.dataset.category === category ? 'flex' : 'none';
+                }
+            });
+        }
+
+        // Add to cart
+        function addToCart(element) {
+            const id = parseInt(element.dataset.id);
+            const existing = cart.find(item => item.id === id);
+            
+            if (existing) {
+                if (existing.quantity < parseInt(element.dataset.stock)) {
+                    existing.quantity++;
+                } else {
+                    showToast('Stock insuficiente', 'error');
+                    return;
+                }
+            } else {
+                cart.push({
+                    id: id,
+                    code: element.dataset.code,
+                    name: element.dataset.name,
+                    price: parseFloat(element.dataset.price),
+                    quantity: 1,
+                    stock: parseInt(element.dataset.stock)
+                });
+            }
+            
+            updateCart();
+            element.classList.add('added');
+            setTimeout(() => element.classList.remove('added'), 300);
+        }
+
+        // Update cart display
+        function updateCart() {
+            const container = document.getElementById('cartItems');
+            
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-basket"></i>
+                        <p>Agregue productos</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = cart.map((item, index) => `
+                    <div class="cart-item">
+                        <div class="item-info">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-price">C$ ${item.price.toFixed(2)}</span>
+                        </div>
+                        <div class="item-controls">
+                            <button onclick="updateQuantity(${index}, -1)">-</button>
+                            <span class="item-qty">${item.quantity}</span>
+                            <button onclick="updateQuantity(${index}, 1)">+</button>
+                        </div>
+                        <div class="item-subtotal">
+                            C$ ${(item.price * item.quantity).toFixed(2)}
+                        </div>
+                        <button class="item-remove" onclick="removeFromCart(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            calculateTotals();
+        }
+
+        // Update quantity
+        function updateQuantity(index, change) {
+            const item = cart[index];
+            const newQty = item.quantity + change;
+            
+            if (newQty > 0 && newQty <= item.stock) {
+                item.quantity = newQty;
+                updateCart();
+            }
+        }
+
+        // Remove from cart
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+
+        // Clear cart
+        function clearCart() {
+            cart = [];
+            document.getElementById('discountPercent').value = 0;
+            document.getElementById('cashReceived').value = '';
+            updateCart();
+        }
+
+        // Calculate totals
+        function calculateTotals() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            const discountAmount = subtotal * (discountPercent / 100);
+            const afterDiscount = subtotal - discountAmount;
+            const tax = afterDiscount * 0.15;
+            const total = afterDiscount + tax;
+
+            document.getElementById('cartSubtotal').textContent = `C$ ${subtotal.toFixed(2)}`;
+            document.getElementById('cartTax').textContent = `C$ ${tax.toFixed(2)}`;
+            document.getElementById('cartDiscount').textContent = `- C$ ${discountAmount.toFixed(2)}`;
+            document.getElementById('cartTotal').textContent = `C$ ${total.toFixed(2)}`;
+
+            calculateChange();
+        }
+
+        // Calculate change
+        function calculateChange() {
+            const total = parseFloat(document.getElementById('cartTotal').textContent.replace('C$ ', '')) || 0;
+            const received = parseFloat(document.getElementById('cashReceived').value) || 0;
+            const change = received - total;
+            
+            document.getElementById('changeAmount').textContent = `C$ ${change.toFixed(2)}`;
+            document.getElementById('changeAmount').className = change >= 0 ? 'positive' : 'negative';
+        }
+
+        // Select payment method
+        function selectPayment(method) {
+            currentPayment = method;
+            document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-method="${method}"]`).classList.add('active');
+            
+            const cashInput = document.getElementById('cashInput');
+            if (method === 'cash') {
+                cashInput.style.display = 'block';
+            } else {
+                cashInput.style.display = 'none';
+            }
+        }
+
+        // Complete sale
+        function completeSale() {
+            if (cart.length === 0) {
+                showToast('Agregue productos para continuar', 'error');
+                return;
+            }
+
+            const total = parseFloat(document.getElementById('cartTotal').textContent.replace('C$ ', '')) || 0;
+            const customerId = document.getElementById('cartCustomer').value;
+            
+            if (!customerId && currentPayment === 'credit') {
+                showToast('Seleccione un cliente para venta a crédito', 'error');
+                return;
+            }
+
+            if (currentPayment === 'cash') {
+                const received = parseFloat(document.getElementById('cashReceived').value) || 0;
+                if (received < total) {
+                    showToast('El efectivo recibido es insuficiente', 'error');
+                    return;
+                }
+            }
+
+            // Prepare data
+            const invoiceData = {
+                customer_id: customerId || null,
+                items: cart.map(item => ({
+                    product_id: item.id,
+                    quantity: item.quantity
+                })),
+                payment_method: currentPayment,
+                discount: parseFloat(document.getElementById('discountPercent').value) || 0
+            };
+
+            // Send to server
+            fetch('/api/pos/create-sale', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(invoiceData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentSaleId = data.invoice_id;
+                    showSaleSummary(data);
+                } else {
+                    showToast(data.message || 'Error al procesar la venta', 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Error de conexión', 'error');
+            });
+        }
+
+        // Show sale summary
+        function showSaleSummary(data) {
+            document.getElementById('summaryInvoice').textContent = data.invoice_number;
+            document.getElementById('summaryTotal').textContent = `C$ ${data.total.toFixed(2)}`;
+            document.getElementById('summaryPaid').textContent = `C$ ${data.paid.toFixed(2)}`;
+            document.getElementById('summaryChange').textContent = `C$ ${data.change.toFixed(2)}`;
+            document.getElementById('saleSummaryModal').classList.add('show');
+        }
+
+        // Print receipt
+        function printReceipt() {
+            if (currentSaleId) {
+                window.open(`/invoices/${currentSaleId}/print`, '_blank');
+            }
+        }
+
+        // New sale
+        function newSale() {
+            closeModal('saleSummaryModal');
+            clearCart();
+            document.getElementById('posSearch').value = '';
+            document.querySelectorAll('.pos-product-card').forEach(card => card.style.display = 'flex');
+        }
+
+        // Quick add customer
+        function quickAddCustomer() {
+            document.getElementById('quickCustomerModal').classList.add('show');
+        }
+
+        // Save quick customer
+        function saveQuickCustomer() {
+            const name = document.getElementById('quickCustomerName').value;
+            if (!name) {
+                showToast('Ingrese el nombre del cliente', 'error');
+                return;
+            }
+
+            fetch('/api/customers/quick-add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    ruc: document.getElementById('quickCustomerRuc').value,
+                    phone: document.getElementById('quickCustomerPhone').value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const select = document.getElementById('cartCustomer');
+                    const option = document.createElement('option');
+                    option.value = data.customer_id;
+                    option.textContent = name;
+                    option.selected = true;
+                    select.appendChild(option);
+                    closeModal('quickCustomerModal');
+                    showToast('Cliente agregado', 'success');
+                    
+                    // Clear form
+                    document.getElementById('quickCustomerName').value = '';
+                    document.getElementById('quickCustomerRuc').value = '';
+                    document.getElementById('quickCustomerPhone').value = '';
+                }
+            });
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Show category filter
+        function showCategory(type) {
+            document.querySelectorAll('.pos-product-card').forEach(card => {
+                card.style.display = 'flex';
+            });
+        }
+    </script>
+</body>
+</html>

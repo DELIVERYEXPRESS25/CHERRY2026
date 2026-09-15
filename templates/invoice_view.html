@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Factura {{ invoice.invoice_number }} - Cherry Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-file-invoice-dollar"></i> Factura {{ invoice.invoice_number }}</h1>
+    <div>
+        {% if invoice.status == 'completed' %}
+        <a href="{{ url_for('cancel_invoice', id=invoice.id) }}" class="btn btn-danger" onclick="return confirm('¿Está seguro de cancelar esta factura? El stock será restaurado.')">
+            <i class="fas fa-times"></i> Cancelar
+        </a>
+        {% endif %}
+        <div class="dropdown" style="display:inline-block">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+            <div class="dropdown-menu">
+                <a href="{{ url_for('print_invoice_format', id=invoice.id, format_type='thermal') }}" target="_blank" class="dropdown-item">
+                    <i class="fas fa-receipt"></i> Recibo 80mm
+                </a>
+                <a href="{{ url_for('print_invoice_format', id=invoice.id, format_type='normal') }}" target="_blank" class="dropdown-item">
+                    <i class="fas fa-file-alt"></i> Factura Normal
+                </a>
+            </div>
+        </div>
+        <button class="btn btn-success" onclick="sendWhatsApp({{ invoice.id }})" title="Enviar por WhatsApp">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+        </button>
+        <a href="{{ url_for('invoice_pdf', id=invoice.id) }}" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf"></i> PDF</a>
+        {% if invoice.status == 'completed' and invoice.payment_method == 'credit' and not invoice.installment_plan %}
+        <a href="{{ url_for('new_installment', invoice_id=invoice.id) }}" class="btn btn-warning"><i class="fas fa-calendar-plus"></i> Plan de Cuotas</a>
+        {% endif %}
+        {% if invoice.installment_plan %}
+        <a href="{{ url_for('view_installment', id=invoice.installment_plan.id) }}" class="btn btn-info"><i class="fas fa-calendar-alt"></i> Ver Plan</a>
+        {% endif %}
+        <a href="{{ url_for('invoices') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+</div>
+
+<div class="invoice-print">
+    <div class="invoice-header">
+        <div class="company-info">
+            <h2><i class="fas fa-cherry"></i> Cherry Inventario</h2>
+            <p>Sistema de Inventario y Facturación</p>
+        </div>
+        <div class="invoice-info">
+            <h3>FACTURA</h3>
+            <p><strong>N°:</strong> {{ invoice.invoice_number }}</p>
+            <p><strong>Fecha:</strong> {{ invoice.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+            <p>
+                <strong>Estado:</strong>
+                {% if invoice.status == 'completed' %}
+                <span class="badge badge-success">Completada</span>
+                {% elif invoice.status == 'pending' %}
+                <span class="badge badge-warning">Pendiente</span>
+                {% else %}
+                <span class="badge badge-danger">Cancelada</span>
+                {% endif %}
+            </p>
+            {% if invoice.is_credit %}
+            <p><strong>Tipo:</strong> <span class="badge badge-warning">Crédito</span></p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if invoice.customer %}
+    <div class="customer-info">
+        <h4>Datos del Cliente</h4>
+        <p><strong>Nombre:</strong> {{ invoice.customer.name }}</p>
+        {% if invoice.customer.ruc %}
+        <p><strong>RUC:</strong> {{ invoice.customer.ruc }}</p>
+        {% endif %}
+        {% if invoice.customer.phone %}
+        <p><strong>Teléfono:</strong> {{ invoice.customer.phone }}</p>
+        {% endif %}
+        {% if invoice.customer.email %}
+        <p><strong>Email:</strong> {{ invoice.customer.email }}</p>
+        {% endif %}
+        {% if invoice.customer.address %}
+        <p><strong>Dirección:</strong> {{ invoice.customer.address }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <table class="data-table invoice-table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Precio Unitario</th>
+                <th>Cantidad</th>
+                <th>Descuento</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ item.product.code }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>{{ format_currency(item.unit_price) }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{% if item.discount > 0 %}{{ item.discount }}%{% else %}-{% endif %}</td>
+                <td>{{ format_currency(item.subtotal) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" class="text-right"><strong>Subtotal:</strong></td>
+                <td>{{ format_currency(invoice.subtotal) }}</td>
+            </tr>
+            {% if invoice.discount_amount and invoice.discount_amount > 0 %}
+            <tr>
+                <td colspan="5" class="text-right"><strong>Descuento ({{ invoice.discount_percent }}%):</strong></td>
+                <td>-{{ format_currency(invoice.discount_amount) }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td colspan="5" class="text-right"><strong>ISV (15%):</strong></td>
+                <td>{{ format_currency(invoice.tax_amount) }}</td>
+            </tr>
+            {% if invoice.tip_amount and invoice.tip_amount > 0 %}
+            <tr>
+                <td colspan="5" class="text-right"><strong>Propina:</strong></td>
+                <td>{{ format_currency(invoice.tip_amount) }}</td>
+            </tr>
+            {% endif %}
+            <tr class="total-row">
+                <td colspan="5" class="text-right"><strong>TOTAL:</strong></td>
+                <td><strong>{{ format_currency(invoice.total) }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="invoice-footer">
+        <div class="payment-info">
+            <p><strong>Método de Pago:</strong>
+                {% if invoice.payment_method == 'cash' %}Efectivo
+                {% elif invoice.payment_method == 'card' %}Tarjeta
+                {% elif invoice.payment_method == 'transfer' %}Transferencia
+                {% else %}Crédito{% endif %}
+            </p>
+            {% if invoice.payment_method == 'cash' %}
+            <p><strong>Recibido:</strong> {{ format_currency(invoice.paid_amount) }}</p>
+            {% endif %}
+        </div>
+        
+        {% if invoice.is_credit %}
+        <div class="credit-info" style="margin-top:15px;padding:15px;background:#fff3cd;border-radius:8px">
+            <h4><i class="fas fa-credit-card"></i> Información de Crédito</h4>
+            <p><strong>Total:</strong> {{ format_currency(invoice.total) }}</p>
+            <p><strong>Abonado:</strong> {{ format_currency(invoice.credit_paid) }}</p>
+            <p><strong>Pendiente:</strong> {{ format_currency(invoice.total - invoice.credit_paid) }}</p>
+            
+            {% if invoice.credit_paid < invoice.total %}
+            <form method="POST" action="{{ url_for('add_payment', id=invoice.id) }}" style="margin-top:10px">
+                <div style="display:flex;gap:10px">
+                    <input type="number" name="amount" step="0.01" min="0.01" max="{{ invoice.total - invoice.credit_paid }}" placeholder="Monto" required style="flex:1;padding:8px;border:1px solid #ddd;border-radius:5px">
+                    <select name="payment_method" style="padding:8px;border:1px solid #ddd;border-radius:5px">
+                        <option value="cash">Efectivo</option>
+                        <option value="card">Tarjeta</option>
+                        <option value="transfer">Transferencia</option>
+                    </select>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Abonar</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if invoice.notes %}
+        <div class="notes" style="margin-top:15px">
+            <p><strong>Notas:</strong> {{ invoice.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    z-index: 1000;
+    min-width: 180px;
+    margin-top: 5px;
+}
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+.dropdown-item {
+    display: block;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.dropdown-item:hover {
+    background: #f8f9fa;
+    color: var(--primary);
+}
+.dropdown-item i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+</style>
+<script>
+function sendWhatsApp(invoiceId) {
+    fetch('/api/whatsapp/send-invoice/' + invoiceId)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                window.open(data.url, '_blank');
+            } else {
+                alert(data.message || 'Error al enviar');
+            }
+        });
+}
+</script>
+{% endblock %}

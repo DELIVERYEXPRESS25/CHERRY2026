@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+*.db
+instance/
+build/
+dist/
+*.spec
+*.app
+*.exe
+.DS_Store
+*.log

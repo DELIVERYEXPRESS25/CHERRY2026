@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Kardex de Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-exchange-alt"></i> Kardex de Inventario</h1>
+</div>
+<div class="filters">
+    <form method="GET" class="filter-form">
+        <div class="form-group">
+            <select name="product">
+                <option value="">Todos los productos</option>
+                {% for p in products %}
+                <option value="{{ p.id }}" {% if p.id|string() == selected_product %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn"><i class="fas fa-filter"></i> Filtrar</button>
+    </form>
+</div>
+<div class="card" style="margin-bottom:20px">
+    <div class="card-header"><h3><i class="fas fa-sliders-h"></i> Ajuste Rápido de Inventario</h3></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('inventory_adjustment') }}" style="display:flex;gap:15px;align-items:flex-end">
+            <div class="form-group" style="margin:0"><label>Producto</label>
+                <select name="product_id" required>
+                    <option value="">Seleccionar</option>
+                    {% for p in products %}<option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.stock }})</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin:0"><label>Ajuste (+/-)</label><input type="number" name="adjustment" required placeholder="+5 o -3"></div>
+            <div class="form-group" style="margin:0;flex:1"><label>Motivo</label><input type="text" name="reason" placeholder="Motivo del ajuste"></div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Ajustar</button>
+        </form>
+    </div>
+</div>
+<div class="card"><div class="card-body">
+    {% if movements %}
+    <table class="data-table">
+        <thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Stock Antes</th><th>Stock Después</th><th>Referencia</th><th>Usuario</th></tr></thead>
+        <tbody>
+            {% for m in movements %}
+            <tr>
+                <td>{{ m.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td><strong>{{ m.product.name }}</strong></td>
+                <td>
+                    {% if m.type == 'entry' %}<span class="badge badge-success">Entrada</span>
+                    {% elif m.type == 'exit' %}<span class="badge badge-danger">Salida</span>
+                    {% elif m.type == 'adjustment' %}<span class="badge badge-warning">Ajuste</span>
+                    {% else %}<span class="badge badge-info">{{ m.type }}</span>{% endif %}
+                </td>
+                <td class="{% if m.type == 'exit' %}text-danger{% else %}text-success{% endif %}"><strong>{{ '+' if m.type != 'exit' else '-' }}{{ m.quantity }}</strong></td>
+                <td>{{ m.before_stock }}</td>
+                <td><strong>{{ m.after_stock }}</strong></td>
+                <td>{{ m.reference_type or '-' }} #{{ m.reference_id or '-' }}</td>
+                <td>{{ m.user.username if m.user else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay movimientos de inventario</p>{% endif %}
+</div></div>
+{% endblock %}

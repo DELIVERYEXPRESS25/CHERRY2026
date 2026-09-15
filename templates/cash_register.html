@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Caja - Cherry Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-cash-register"></i> Gestión de Caja</h1>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-lock-open"></i> Estado de Caja</h3>
+        </div>
+        <div class="card-body">
+            {% if active_register %}
+            <div class="register-status open">
+                <div class="status-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="status-info">
+                    <h4>Caja Abierta</h4>
+                    <p><strong>Monto inicial:</strong> {{ format_currency(active_register.openning_amount) }}</p>
+                    <p><strong>Abierta por:</strong> {{ active_register.user.full_name }}</p>
+                    <p><strong>Fecha:</strong> {{ active_register.opened_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+            </div>
+            
+            <div class="register-summary">
+                <div class="summary-item">
+                    <span>Ventas en efectivo:</span>
+                    <span>{{ format_currency(today_sales) }}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total esperado:</span>
+                    <span>{{ format_currency(active_register.openning_amount + today_sales) }}</span>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:15px">
+                <a href="{{ url_for('cash_reconciliation', register_id=active_register.id) }}" class="btn btn-primary">
+                    <i class="fas fa-balance-scale"></i> Cuadrar Caja (Detalle)
+                </a>
+            </div>
+
+            <form method="POST" action="{{ url_for('close_cash_register') }}" class="close-register-form" onsubmit="return confirm('¿Está seguro de cerrar la caja?')">
+                <div class="form-group">
+                    <label for="actual_amount">Monto contado en caja:</label>
+                    <input type="number" id="actual_amount" name="actual_amount" step="0.01" required placeholder="0.00">
+                </div>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-lock"></i> Cerrar Caja
+                </button>
+            </form>
+            {% else %}
+            <div class="register-status closed">
+                <div class="status-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="status-info">
+                    <h4>No hay caja abierta</h4>
+                    <p>Abra una caja para comenzar a registrar ventas</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('open_cash_register') }}" class="open-register-form">
+                <div class="form-group">
+                    <label for="amount">Monto inicial:</label>
+                    <input type="number" id="amount" name="amount" step="0.01" required placeholder="0.00" value="0.00">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-lock-open"></i> Abrir Caja
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-exchange-alt"></i> Movimientos</h3>
+        </div>
+        <div class="card-body">
+            {% if active_register %}
+            <form method="POST" action="{{ url_for('add_cash_entry') }}" class="entry-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="type">Tipo:</label>
+                        <select id="type" name="type" required>
+                            <option value="deposit">Depósito</option>
+                            <option value="withdrawal">Retiro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Monto:</label>
+                        <input type="number" id="amount" name="amount" step="0.01" required placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción:</label>
+                    <input type="text" id="description" name="description" placeholder="Motivo del movimiento">
+                </div>
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Agregar Movimiento
+                </button>
+            </form>
+
+            {% if today_entries %}
+            <table class="data-table" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Tipo</th>
+                        <th>Monto</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in today_entries %}
+                    <tr>
+                        <td>{{ entry.created_at.strftime('%H:%M') }}</td>
+                        <td>
+                            {% if entry.type == 'sale' %}
+                            <span class="badge badge-success">Venta</span>
+                            {% elif entry.type == 'deposit' %}
+                            <span class="badge badge-info">Depósito</span>
+                            {% elif entry.type == 'withdrawal' %}
+                            <span class="badge badge-warning">Retiro</span>
+                            {% elif entry.type == 'refund' %}
+                            <span class="badge badge-danger">Devolución</span>
+                            {% endif %}
+                        </td>
+                        <td class="{% if entry.amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ format_currency(entry.amount) }}
+                        </td>
+                        <td>{{ entry.description or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+            {% else %}
+            <div class="no-data">
+                <i class="fas fa-info-circle"></i>
+                <p>Abra una caja para ver los movimientos</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Cuadrar Caja - Caja #{{ register.id }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-balance-scale"></i> Cuadrar Caja #{{ register.id }}</h1>
+    <a href="{{ url_for('cash_register') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-calculator"></i></div><div class="stat-info"><h3>{{ format_currency(expected) }}</h3><p>Efectivo Esperado</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-coins"></i></div><div class="stat-info"><h3>{{ format_currency(register.openning_amount) }}</h3><p>Fondo Inicial</p></div></div>
+</div>
+<div class="card"><div class="card-header"><h3><i class="fas fa-money-bill-wave"></i> Conteo de Efectivo</h3></div><div class="card-body">
+    <form method="POST" class="form">
+        <div class="denomination-grid">
+            <div class="denom-item"><label>C$ 1</label><input type="number" name="denomination_1" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d1">0</span></span></div>
+            <div class="denom-item"><label>C$ 5</label><input type="number" name="denomination_5" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d5">0</span></span></div>
+            <div class="denom-item"><label>C$ 10</label><input type="number" name="denomination_10" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d10">0</span></span></div>
+            <div class="denom-item"><label>C$ 25</label><input type="number" name="denomination_25" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d25">0</span></span></div>
+            <div class="denom-item"><label>C$ 50</label><input type="number" name="denomination_50" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d50">0</span></span></div>
+            <div class="denom-item"><label>C$ 100</label><input type="number" name="denomination_100" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d100">0</span></span></div>
+            <div class="denom-item"><label>C$ 500</label><input type="number" name="denomination_500" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d500">0</span></span></div>
+            <div class="denom-item"><label>C$ 1,000</label><input type="number" name="denomination_1000" min="0" value="0" onchange="calcTotal()"><span>C$ <span id="d1000">0</span></span></div>
+        </div>
+        <div class="form-row" style="margin-top:20px">
+            <div class="form-group"><label>Total Contado (C$)</label><input type="number" step="0.01" name="counted_cash" id="counted_cash" required></div>
+            <div class="form-group">
+                <label>Diferencia</label>
+                <div id="difference-display" class="diff-display">C$ 0.00</div>
+                <input type="hidden" name="difference" id="difference_hidden">
+            </div>
+        </div>
+        <div class="form-group"><label>Notas</label><textarea name="notes" rows="2"></textarea></div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn"><i class="fas fa-check"></i> Cerrar y Cuadrar Caja</button>
+            <a href="{{ url_for('cash_register') }}" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div></div>
+<style>
+.denomination-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+.denom-item { display: flex; flex-direction: column; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
+.denom-item label { font-weight: bold; font-size: 18px; margin-bottom: 8px; color: #333; }
+.denom-item input { width: 60px; text-align: center; padding: 5px; font-size: 16px; }
+.denom-item span { margin-top: 8px; font-size: 12px; color: #666; }
+.diff-display { font-size: 24px; font-weight: bold; padding: 10px; border-radius: 5px; text-align: center; }
+.diff-positive { color: #28a745; background: #d4edda; }
+.diff-negative { color: #dc3545; background: #f8d7da; }
+.diff-zero { color: #6c757d; background: #e9ecef; }
+</style>
+<script>
+function calcTotal() {
+    const vals = {
+        1: parseInt(document.querySelector('[name=denomination_1]').value) || 0,
+        5: parseInt(document.querySelector('[name=denomination_5]').value) || 0,
+        10: parseInt(document.querySelector('[name=denomination_10]').value) || 0,
+        25: parseInt(document.querySelector('[name=denomination_25]').value) || 0,
+        50: parseInt(document.querySelector('[name=denomination_50]').value) || 0,
+        100: parseInt(document.querySelector('[name=denomination_100]').value) || 0,
+        500: parseInt(document.querySelector('[name=denomination_500]').value) || 0,
+        1000: parseInt(document.querySelector('[name=denomination_1000]').value) || 0
+    };
+    let total = 0;
+    for (let [val, qty] of Object.entries(vals)) {
+        document.getElementById('d' + val).textContent = (val * qty).toFixed(2);
+        total += val * qty;
+    }
+    document.getElementById('counted_cash').value = total.toFixed(2);
+    updateDifference();
+}
+function updateDifference() {
+    const counted = parseFloat(document.getElementById('counted_cash').value) || 0;
+    const expected = {{ expected }};
+    const diff = counted - expected;
+    const el = document.getElementById('difference-display');
+    el.textContent = 'C$ ' + diff.toFixed(2);
+    el.className = 'diff-display ' + (diff > 0 ? 'diff-positive' : diff < 0 ? 'diff-negative' : 'diff-zero');
+    document.getElementById('difference_hidden').value = diff.toFixed(2);
+}
+document.getElementById('counted_cash').addEventListener('input', updateDifference);
+</script>
+{% endblock %}

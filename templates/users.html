@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Usuarios - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-user-shield"></i> Gestión de Usuarios</h1>
+    <a href="{{ url_for('add_user') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar</a>
+</div>
+<div class="card"><div class="card-body">
+    <table class="data-table">
+        <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th><th>Creado</th><th>Acciones</th></tr></thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td><strong>{{ u.username }}</strong></td>
+                <td>{{ u.full_name }}</td>
+                <td><span class="badge badge-{% if u.role == 'admin' %}danger{% elif u.role == 'manager' %}warning{% else %}info{% endif %}">{{ u.role }}</span></td>
+                <td>{% if u.is_active_user %}<span class="badge badge-success">Activo</span>{% else %}<span class="badge badge-danger">Inactivo</span>{% endif %}</td>
+                <td>{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('edit_user', id=u.id) }}" class="btn btn-sm btn-info"><i class="fas fa-edit"></i></a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div></div>
+<div style="margin-top:20px">
+    <a href="{{ url_for('activity_log') }}" class="btn btn-secondary"><i class="fas fa-history"></i> Ver Log de Actividad</a>
+</div>
+{% endblock %}

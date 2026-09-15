@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Alertas - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-bell"></i> Centro de Alertas <span class="badge badge-danger" id="unread-badge">{{ unread_count }}</span></h1>
+    <div>
+        <a href="{{ url_for('generate_alerts') }}" class="btn btn-primary"><i class="fas fa-sync"></i> Generar Alertas</a>
+        <a href="{{ url_for('mark_all_alerts_read') }}" class="btn"><i class="fas fa-check-double"></i> Marcar todo leído</a>
+    </div>
+</div>
+<div class="card"><div class="card-body">
+    {% if alerts %}
+    <div class="alerts-list">
+        {% for alert in alerts %}
+        <div class="alert-item alert-{{ alert.severity }} {% if not alert.is_read %}unread{% endif %}" data-id="{{ alert.id }}">
+            <div class="alert-icon">
+                {% if alert.type == 'low_stock' %}<i class="fas fa-exclamation-triangle"></i>
+                {% elif alert.type == 'expiring' %}<i class="fas fa-clock"></i>
+                {% elif alert.type == 'credit_due' %}<i class="fas fa-calendar-check"></i>
+                {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+            </div>
+            <div class="alert-content">
+                <h4>{{ alert.title }}</h4>
+                <p>{{ alert.message }}</p>
+                <small>{{ alert.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+            </div>
+            {% if not alert.is_read %}
+            <button class="btn btn-sm" onclick="markRead({{ alert.id }}, this)"><i class="fas fa-check"></i></button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}<p class="no-data">No hay alertas</p>{% endif %}
+</div></div>
+<style>
+.alerts-list { display: flex; flex-direction: column; gap: 10px; }
+.alert-item { display: flex; align-items: flex-start; gap: 15px; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; transition: all 0.2s; }
+.alert-item.unread { background: #f8f9ff; border-color: #b8d4fe; }
+.alert-item .alert-icon { font-size: 20px; padding: 10px; border-radius: 50%; }
+.alert-item .alert-content { flex: 1; }
+.alert-item .alert-content h4 { margin: 0 0 5px 0; font-size: 14px; }
+.alert-item .alert-content p { margin: 0; color: #555; font-size: 13px; }
+.alert-item .alert-content small { color: #999; }
+.alert-danger .alert-icon { color: #dc3545; background: #f8d7da; }
+.alert-warning .alert-icon { color: #ffc107; background: #fff3cd; }
+.alert-info .alert-icon { color: #17a2b8; background: #d1ecf1; }
+</style>
+<script>
+function markRead(id, btn) {
+    fetch('/alerts/mark-read/' + id).then(r => r.json()).then(data => {
+        if (data.success) {
+            btn.closest('.alert-item').classList.remove('unread');
+            btn.remove();
+            const badge = document.getElementById('unread-badge');
+            badge.textContent = parseInt(badge.textContent) - 1;
+        }
+    });
+}
+</script>
+{% endblock %}

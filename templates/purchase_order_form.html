@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Nueva Orden de Compra{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-shopping-cart"></i> Nueva Orden de Compra</h1>
+    <a href="{{ url_for('purchase_orders') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="card"><div class="card-body">
+    <form method="POST" id="poForm" class="form">
+        <div class="form-group">
+            <label>Proveedor *</label>
+            <select name="supplier_id" required>
+                <option value="">Seleccione proveedor</option>
+                {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Buscar producto</label>
+            <input type="text" id="productSearch" placeholder="Buscar por nombre o código...">
+            <div id="productResults" class="search-results"></div>
+        </div>
+        <table class="data-table" id="itemsTable">
+            <thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Subtotal</th><th></th></tr></thead>
+            <tbody id="itemsBody"></tbody>
+        </table>
+        <p id="noItems" class="no-data">Agregue productos</p>
+        <div class="invoice-summary">
+            <div class="summary-row"><span>Subtotal:</span><span id="subtotal">C$ 0.00</span></div>
+            <div class="summary-row"><span>ISV (15%):</span><span id="tax">C$ 0.00</span></div>
+            <div class="summary-row total"><span>Total:</span><span id="total">C$ 0.00</span></div>
+        </div>
+        <div class="form-group"><label>Notas</label><textarea name="notes" rows="2"></textarea></div>
+        <input type="hidden" id="itemsJson" name="items" value="[]">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Crear Orden</button>
+        </div>
+    </form>
+</div></div>
+<script>
+const products = {{ products | tojson }};
+let items = [];
+document.getElementById('productSearch').addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase();
+    const r = document.getElementById('productResults');
+    r.innerHTML = '';
+    if (q.length < 2) { r.style.display = 'none'; return; }
+    const m = products.filter(p => p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q)).slice(0, 5);
+    if (m.length > 0) {
+        r.style.display = 'block';
+        m.forEach(p => {
+            const d = document.createElement('div');
+            d.className = 'search-result-item';
+            d.innerHTML = `<strong>${p.code}</strong> - ${p.name} <span>C$ ${p.purchase_price}</span>`;
+            d.onclick = () => addItem(p);
+            r.appendChild(d);
+        });
+    } else r.style.display = 'none';
+});
+function addItem(p) {
+    const ex = items.find(i => i.id === p.id);
+    if (ex) ex.quantity++;
+    else items.push({ id: p.id, code: p.code, name: p.name, price: parseFloat(p.purchase_price), quantity: 1 });
+    updateTable();
+    document.getElementById('productSearch').value = '';
+    document.getElementById('productResults').style.display = 'none';
+}
+function removeItem(i) { items.splice(i, 1); updateTable(); }
+function updateTable() {
+    const t = document.getElementById('itemsBody');
+    if (items.length === 0) { t.innerHTML = ''; document.getElementById('noItems').style.display = 'block'; document.getElementById('itemsTable').style.display = 'none'; }
+    else {
+        document.getElementById('noItems').style.display = 'none';
+        document.getElementById('itemsTable').style.display = 'table';
+        t.innerHTML = items.map((item, i) => `<tr><td>${item.code}</td><td>${item.name}</td><td><input type="number" value="${item.quantity}" min="1" onchange="items[${i}].quantity=parseInt(this.value);updateTable()" style="width:60px"></td><td><input type="number" value="${item.price}" step="0.01" onchange="items[${i}].price=parseFloat(this.value);updateTable()" style="width:100px"></td><td>C$ ${(item.price*item.quantity).toFixed(2)}</td><td><button type="button" class="btn btn-sm btn-danger" onclick="removeItem(${i})"><i class="fas fa-times"></i></button></td></tr>`).join('');
+    }
+    const sub = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const tax = sub * 0.15;
+    document.getElementById('subtotal').textContent = `C$ ${sub.toFixed(2)}`;
+    document.getElementById('tax').textContent = `C$ ${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = `C$ ${(sub+tax).toFixed(2)}`;
+    document.getElementById('itemsJson').value = JSON.stringify(items.map(i => ({ product_id: i.id, quantity: i.quantity, unit_price: i.price })));
+}
+</script>
+{% endblock %}

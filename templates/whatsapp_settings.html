@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Configuración WhatsApp - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fab fa-whatsapp"></i> Configuración WhatsApp</h1>
+    <a href="{{ url_for('settings') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('save_whatsapp_settings') }}" class="form">
+            <div class="form-group">
+                <label><input type="checkbox" name="is_active" {% if config.is_active %}checked{% endif %}> Activar envío por WhatsApp</label>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>API Key (Twilio/WhatsApp Business)</label><input type="text" name="api_key" value="{{ config.api_key or '' }}"></div>
+                <div class="form-group"><label>Phone Number ID</label><input type="text" name="phone_number_id" value="{{ config.phone_number_id or '' }}"></div>
+            </div>
+            <div class="form-group"><label>Teléfono del Negocio</label><input type="text" name="business_phone" value="{{ config.business_phone or '' }}" placeholder="+505 0000 0000"></div>
+            <div class="form-group">
+                <label>Mensaje de Factura</label>
+                <textarea name="invoice_message" rows="3">{{ config.invoice_message or '' }}</textarea>
+                <small>Variables: {'{'}customer_name{'}'}, {'{'}invoice_number{'}'}, {'{'}total{'}'}, {'{'}business_name{'}'}</small>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card" style="margin-top:20px">
+    <div class="card-header"><h3><i class="fas fa-info-circle"></i> Cómo funciona</h3></div>
+    <div class="card-body">
+        <p>1. Obtén una API key de <a href="https://twilio.com" target="_blank">Twilio</a> o WhatsApp Business API</p>
+        <p>2. Configura tu número de teléfono verificado</p>
+        <p>3. Personaliza el mensaje que recibirán tus clientes</p>
+        <p>4. Desde cada factura, haz clic en el botón de WhatsApp para enviar</p>
+        <br>
+        <div style="background:#25D366;color:white;padding:15px;border-radius:8px;text-align:center">
+            <i class="fab fa-whatsapp" style="font-size:24px"></i>
+            <p style="margin-top:10px">WhatsApp Business API te permite enviar facturas y notificaciones a tus clientes automáticamente</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

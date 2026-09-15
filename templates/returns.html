@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Devoluciones - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-undo"></i> Devoluciones</h1>
+</div>
+<div class="card"><div class="card-body">
+    {% if returns %}
+    <table class="data-table">
+        <thead><tr><th>N° Devolución</th><th>Factura Original</th><th>Cliente</th><th>Total</th><th>Fecha</th><th>Acciones</th></tr></thead>
+        <tbody>
+            {% for r in returns %}
+            <tr>
+                <td>{{ r.return_number }}</td>
+                <td><a href="{{ url_for('view_invoice', id=r.invoice_id) }}">{{ r.invoice.invoice_number if r.invoice else '-' }}</a></td>
+                <td>{{ r.customer.name if r.customer else '-' }}</td>
+                <td>{{ format_currency(r.total) }}</td>
+                <td>{{ r.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td><a href="{{ url_for('view_return', id=r.id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay devoluciones registradas</p>{% endif %}
+</div></div>
+{% endblock %}

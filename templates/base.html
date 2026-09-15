@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cherry Inventario{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-cherry"></i>
+            <h2>Cherry</h2>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li><a href="{{ url_for('pos') }}" class="{% if request.endpoint == 'pos' %}active{% endif %} pos-link"><i class="fas fa-cash-register"></i> POS</a></li>
+            <li class="nav-section"><i class="fas fa-boxes"></i> Inventario</li>
+            <li><a href="{{ url_for('products') }}" class="{% if 'product' in request.endpoint %}active{% endif %}"><i class="fas fa-box"></i> Productos</a></li>
+            <li><a href="{{ url_for('suppliers') }}" class="{% if 'supplier' in request.endpoint %}active{% endif %}"><i class="fas fa-truck"></i> Proveedores</a></li>
+            <li><a href="{{ url_for('purchase_orders') }}" class="{% if 'purchase' in request.endpoint %}active{% endif %}"><i class="fas fa-shopping-cart"></i> Compras</a></li>
+            <li class="nav-section"><i class="fas fa-handshake"></i> Ventas</li>
+            <li><a href="{{ url_for('invoices') }}" class="{% if 'invoice' in request.endpoint and 'return' not in request.endpoint %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Facturas</a></li>
+            <li><a href="{{ url_for('returns') }}" class="{% if 'return' in request.endpoint %}active{% endif %}"><i class="fas fa-undo"></i> Devoluciones</a></li>
+            <li><a href="{{ url_for('quotations') }}" class="{% if 'quotation' in request.endpoint %}active{% endif %}"><i class="fas fa-file-alt"></i> Presupuestos</a></li>
+            <li><a href="{{ url_for('customers') }}" class="{% if 'customer' in request.endpoint %}active{% endif %}"><i class="fas fa-users"></i> Clientes</a></li>
+            <li class="nav-section"><i class="fas fa-users"></i> Personal</li>
+            <li><a href="{{ url_for('employees') }}" class="{% if 'employee' in request.endpoint %}active{% endif %}"><i class="fas fa-user-tie"></i> Empleados</a></li>
+            <li class="nav-divider"></li>
+            <li class="nav-section"><i class="fas fa-cog"></i> Operaciones</li>
+            <li><a href="{{ url_for('cash_register') }}" class="{% if 'cash_register' in request.endpoint %}active{% endif %}"><i class="fas fa-cash-register"></i> Caja</a></li>
+            <li><a href="{{ url_for('kardex') }}" class="{% if request.endpoint == 'kardex' %}active{% endif %}"><i class="fas fa-exchange-alt"></i> Kardex</a></li>
+            <li><a href="{{ url_for('installments') }}" class="{% if 'installment' in request.endpoint %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Crédito a Plazos</a></li>
+            <li><a href="{{ url_for('alerts') }}" class="{% if request.endpoint == 'alerts' %}active{% endif %} nav-item-with-badge"><i class="fas fa-bell"></i> Alertas <span class="alert-badge" id="nav-alert-count" style="display:none"></span></a></li>
+            {% if current_user.role in ['admin', 'manager'] %}
+            <li><a href="{{ url_for('reconciliation_history') }}" class="{% if request.endpoint == 'reconciliation_history' %}active{% endif %}"><i class="fas fa-history"></i> Cuadres de Caja</a></li>
+            {% endif %}
+            {% if current_user.role in ['admin', 'manager'] %}
+            <li><a href="{{ url_for('accounting') }}" class="{% if request.endpoint == 'accounting' %}active{% endif %}"><i class="fas fa-calculator"></i> Contabilidad</a></li>
+            {% endif %}
+            {% if current_user.role == 'admin' %}
+            <li><a href="{{ url_for('users') }}" class="{% if 'user' in request.endpoint %}active{% endif %}"><i class="fas fa-user-shield"></i> Usuarios</a></li>
+            <li><a href="{{ url_for('whatsapp_settings') }}" class="{% if 'whatsapp' in request.endpoint %}active{% endif %}"><i class="fab fa-whatsapp"></i> WhatsApp</a></li>
+            <li><a href="{{ url_for('settings') }}" class="{% if request.endpoint == 'settings' %}active{% endif %}"><i class="fas fa-cog"></i> Configuración</a></li>
+            <li><a href="{{ url_for('admin_updates') }}" class="{% if request.endpoint == 'admin_updates' %}active{% endif %}"><i class="fas fa-cloud-upload-alt"></i> Actualizaciones</a></li>
+            <li><a href="{{ url_for('export_products') }}"><i class="fas fa-file-export"></i> Exportar Productos</a></li>
+            <li><a href="{{ url_for('export_customers') }}"><i class="fas fa-file-export"></i> Exportar Clientes</a></li>
+            <li><a href="{{ url_for('export_invoices') }}"><i class="fas fa-file-export"></i> Exportar Facturas</a></li>
+            {% endif %}
+            <li class="nav-divider"></li>
+            <li><a href="{{ url_for('help_center') }}" class="{% if 'help' in request.endpoint or 'support' in request.endpoint %}active{% endif %}"><i class="fas fa-question-circle"></i> Ayuda</a></li>
+            <li class="nav-divider"></li>
+            <li class="nav-section"><i class="fas fa-chart-bar"></i> Reportes</li>
+            <li><a href="{{ url_for('reports') }}" class="{% if request.endpoint == 'reports' %}active{% endif %}"><i class="fas fa-chart-line"></i> General</a></li>
+            <li><a href="{{ url_for('daily_report') }}" class="{% if request.endpoint == 'daily_report' %}active{% endif %}"><i class="fas fa-calendar-day"></i> Diario</a></li>
+            <li><a href="{{ url_for('profit_report') }}" class="{% if request.endpoint == 'profit_report' %}active{% endif %}"><i class="fas fa-dollar-sign"></i> Ganancias</a></li>
+            <li><a href="{{ url_for('inventory_report') }}" class="{% if request.endpoint == 'inventory_report' %}active{% endif %}"><i class="fas fa-warehouse"></i> Inventario</a></li>
+            {% if current_user.role in ['admin', 'manager'] %}
+            <li><a href="{{ url_for('dgi_report') }}" class="{% if request.endpoint == 'dgi_report' %}active{% endif %}"><i class="fas fa-landmark"></i> DGI</a></li>
+            {% endif %}
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span>{{ current_user.full_name }}</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="{% if current_user.is_authenticated %}content{% else %}login-page{% endif %}">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+    function checkAlerts() {
+        fetch('/api/alerts/count').then(r=>r.json()).then(data=>{
+            const badge = document.getElementById('nav-alert-count');
+            if (data.count > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = data.count;
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+    }
+    checkAlerts();
+    setInterval(checkAlerts, 300000);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

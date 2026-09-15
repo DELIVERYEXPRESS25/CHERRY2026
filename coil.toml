@@ -1,0 +1,14 @@
+[project]
+name = "CherryInventario"
+version = "1.0.0"
+description = "Sistema de Inventario y Facturación - Cherry"
+
+[build]
+entry = "app.py"
+console = true
+gui = false
+mode = "portable"
+name = "CherryInventario"
+
+[python]
+version = "3.9"

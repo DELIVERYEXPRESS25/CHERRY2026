@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Historial de Cuadres de Caja{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-history"></i> Historial de Cuadres</h1>
+    <a href="{{ url_for('cash_register') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="card"><div class="card-body">
+    {% if reconciliations %}
+    <table class="data-table">
+        <thead><tr><th>Caja #</th><th>Fecha</th><th>Efectivo Esperado</th><th>Efectivo Contado</th><th>Diferencia</th><th>Cuadró por</th></tr></thead>
+        <tbody>
+            {% for r in reconciliations %}
+            <tr>
+                <td>{{ r.register_id }}</td>
+                <td>{{ r.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ format_currency(r.expected_cash) }}</td>
+                <td>{{ format_currency(r.counted_cash) }}</td>
+                <td><span class="badge badge-{% if r.difference == 0 %}success{% elif r.difference > 0 %}info{% else %}danger{% endif %}">{{ format_currency(r.difference) }}</span></td>
+                <td>{{ r.user.username if r.user else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay cuadres registrados</p>{% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,532 @@
+================================================================================
+              CHERRY INVENTARIO - DOCUMENTACIÓN COMPLETA
+                     Sistema de Inventario y Facturación
+================================================================================
+
+Fecha: 14 de Septiembre 2026
+Versión: 1.0.0
+Autor: Carlos Berry
+
+================================================================================
+                          ÍNDICE
+================================================================================
+
+1. DESCRIPCIÓN DEL SISTEMA
+2. REQUISITOS
+3. INSTALACIÓN
+4. ESTRUCTURA DEL PROYECTO
+5. MÓDULOS DEL SISTEMA
+6. USO DEL SISTEMA
+7. EMPAQUETADO (.exe / .app)
+8. SISTEMA DE ACTUALIZACIONES CON GITHUB
+9. SOLUCIÓN DE PROBLEMAS
+10. CONTACTO Y SOPORTE
+
+================================================================================
+                    1. DESCRIPCIÓN DEL SISTEMA
+================================================================================
+
+Cherry Inventario es un sistema completo de inventario y facturación diseñado
+para negocios en Nicaragua. Incluye:
+
+- Punto de Venta (POS) táctil
+- Facturación con ISV (15%)
+- Gestión de productos, clientes y proveedores
+- Control de inventario con kardex
+- Crédito a plazos
+- Sistema de empleados con comisiones
+- Reportes contables y fiscales (DGI)
+- Exportación a CSV/Excel
+- Centro de ayuda integrado
+- Sistema de actualizaciones automáticas vía GitHub
+
+Moneda: Córdoba Nicaragüense (C$)
+ISV: 15%
+
+================================================================================
+                         2. REQUISITOS
+================================================================================
+
+PARA DESARROLLO:
+- Python 3.9 o superior
+- macOS, Linux o Windows
+
+PARA USUARIOS FINALES:
+- Windows 10+ (para .exe)
+- macOS 10.15+ (para .app)
+- Sin necesidad de instalar Python
+
+================================================================================
+                       3. INSTALACIÓN
+================================================================================
+
+PASO 1: Clonar o descargar el proyecto
+---------------------------------------
+git clone https://github.com/DELIVERYEXPRESS25/CHERRY.git
+cd CHERRY
+
+PASO 2: Crear entorno virtual
+------------------------------
+python3 -m venv venv
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate     # Windows
+
+PASO 3: Instalar dependencias
+------------------------------
+pip install -r requirements.txt
+
+PASO 4: Ejecutar
+-----------------
+python app.py
+
+PASO 5: Abrir navegador
+-------------------------
+http://127.0.0.1:5000
+
+CREDENCIALES:
+- Admin:    admin / admin123
+- Cajero:   cajero / cajero123
+
+================================================================================
+                  4. ESTRUCTURA DEL PROYECTO
+================================================================================
+
+CHERRY/
+├── app.py                    # Archivo principal (modelos + rutas)
+├── requirements.txt          # Dependencias de Python
+├── updater.py                # Auto-actualizador
+├── github_release.py         # Script para crear releases
+├── build_windows.bat         # Script de compilación Windows
+├── build_macos.sh            # Script de compilación macOS
+├── version.txt               # Versión actual
+│
+├── instance/
+│   └── cherry_inventory.db   # Base de datos SQLite
+│
+├── templates/                # Archivos HTML
+│   ├── base.html             # Plantilla base (sidebar + nav)
+│   ├── login.html            # Login
+│   ├── dashboard.html        # Panel principal con gráficos
+│   ├── pos.html              # Punto de Venta
+│   ├── products.html         # Lista de productos
+│   ├── product_form.html     # Crear/editar producto
+│   ├── customers.html        # Lista de clientes
+│   ├── customer_form.html    # Crear/editar cliente
+│   ├── invoices.html         # Lista de facturas
+│   ├── invoice_form.html     # Crear factura
+│   ├── invoice_view.html     # Ver factura
+│   ├── print_thermal.html    # Recibo 80mm
+│   ├── print_normal.html     # Factura tamaño carta
+│   ├── invoice_pdf.html      # PDF imprimible
+│   ├── kardex.html           # Kardex de inventario
+│   ├── employees.html        # Lista de empleados
+│   ├── employee_form.html    # Crear/editar empleado
+│   ├── employee_detail.html  # Detalle del empleado
+│   ├── installments.html     # Crédito a plazos
+│   ├── installment_form.html # Crear plan de cuotas
+│   ├── installment_detail.html # Ver plan
+│   ├── cash_register.html    # Caja
+│   ├── cash_reconciliation.html # Cuadrar caja
+│   ├── reconciliation_history.html # Historial cuadres
+│   ├── alerts.html           # Centro de alertas
+│   ├── reports.html          # Reportes generales
+│   ├── daily_report.html     # Reporte diario
+│   ├── profit_report.html    # Reporte de ganancias
+│   ├── inventory_report.html # Reporte de inventario
+│   ├── dgi_report.html       # Reporte DGI
+│   ├── accounting.html       # Contabilidad
+│   ├── help_center.html      # Centro de ayuda
+│   ├── help_guide.html       # Guías por módulo
+│   ├── support_faq.html      # Preguntas frecuentes
+│   ├── support_contact.html  # Contactar soporte
+│   ├── admin_updates.html    # Panel de actualizaciones
+│   └── settings.html         # Configuración
+│
+├── static/
+│   ├── css/
+│   │   ├── style.css         # Estilos principales
+│   │   └── pos.css           # Estilos del POS
+│   ├── js/
+│   │   └── main.js           # JavaScript principal
+│   └── img/                  # Imágenes (si aplica)
+│
+└── update_server/            # Servidor de actualizaciones
+    ├── server.py
+    └── version.json
+
+================================================================================
+                     5. MÓDULOS DEL SISTEMA
+================================================================================
+
+5.1 DASHBOARD (Panel Principal)
+--------------------------------
+- Estadísticas: productos, clientes, stock bajo, ventas
+- Gráfico de barras: ventas mensuales (12 meses)
+- Gráfico de dona: productos más vendidos
+- Facturas recientes
+- Alertas de stock bajo y vencimiento
+
+5.2 PUNTO DE VENTA (POS)
+--------------------------
+- Interfaz táctil para ventas rápidas
+- Búsqueda de productos por código o nombre
+- Carrito de compras
+- Métodos de pago: efectivo, tarjeta, transferencia, crédito
+- Descuentos y propinas
+- Atajos de teclado: F2 (buscar), F4 (nueva venta), F9 (pagar), F12 (cancelar)
+
+5.3 PRODUCTOS
+--------------
+- Código único, nombre, categoría
+- Precio de compra y venta
+- Stock actual y stock mínimo
+- Control de lotes y vencimiento
+- Productos kit/combo (descontar componentes)
+- Importar productos desde CSV
+
+5.4 CLIENTES
+--------------
+- Nombre, RUC, teléfono, email, dirección
+- Puntos de lealtad (1 punto por C$10)
+- Límite de crédito
+- Nivel VIP
+- Importar clientes desde CSV
+
+5.5 FACTURACIÓN
+----------------
+- Facturas con ISV automático (15%)
+- Descuentos por porcentaje
+- Propinas
+- Múltiples métodos de pago
+- Pago a crédito
+- Imprimir: recibo térmico (80mm) o factura normal (carta)
+- Exportar a PDF
+- Enviar por WhatsApp
+
+5.6 KARDEX DE INVENTARIO
+-------------------------
+- Historial completo de movimientos
+- Entradas, salidas, ajustes
+- Filtro por producto
+- Ajuste rápido de inventario
+- Registro automático al facturar
+
+5.7 CRÉDITO A PLAZOS
+-----------------------
+- Crear planes desde facturas a crédito
+- Cuotas: semanal, quincenal, mensual
+- Registro de pagos parciales
+- Seguimiento de saldo pendiente
+- Alertas de cuotas vencidas
+
+5.8 EMPLEADOS/VENDEDORES
+--------------------------
+- Registro con cargo, teléfono, email
+- Tasa de comisión por ventas
+- Salario base
+- Dashboard individual con ventas y comisión del mes
+
+5.9 CAJA
+----------
+- Abrir caja con fondo inicial
+- Registro automático de ventas
+- Entradas y salidas manuales
+- Cuadrar caja con conteo por denominaciones
+- Historial de cuadres
+
+5.10 REPORTES
+--------------
+- Reporte diario: resumen del día
+- Reporte de ganancias: utilidad bruta y neta
+- Reporte de inventario: valorización y stock
+- Reporte DGI: para Dirección General de Ingresos de Nicaragua
+- Todos exportables a CSV
+
+5.11 CONTABILIDAD
+-------------------
+- Registro de ingresos y gastos
+- Categorías: ventas, compras, nómina, alquiler, etc.
+- Balance mensual automático
+- Solo administradores y gerentes
+
+5.12 ALERTAS
+--------------
+- Stock bajo (por debajo del mínimo)
+- Productos por vencimiento (próximos 30 días)
+- Cuotas de crédito pendientes/vencidas
+- Badge de notificaciones en el menú
+
+5.13 SISTEMA DE AYUDA
+-----------------------
+- Centro de ayuda con 8 módulos
+- Guías paso a paso
+- 12 preguntas frecuentes
+- Formulario de contacto
+
+5.14 CONFIGURACIÓN
+--------------------
+- Datos del negocio (nombre, RUC, dirección, teléfono)
+- Configuración de ISV
+- Formato de factura (80mm, 58mm, carta, medio carta)
+- Secciones activables/desactivables
+- Mensaje personalizado en facturas
+- Configuración de WhatsApp
+
+================================================================================
+                       6. USO DEL SISTEMA
+================================================================================
+
+6.1 CREAR UN PRODUCTO
+-----------------------
+1. Ir a Productos > Agregar Producto
+2. Ingresar código único (ej: PROD001)
+3. Ingresar nombre
+4. Seleccionar categoría
+5. Ingresar precio de compra y venta
+6. Ingresar stock actual
+7. Ingresar stock mínimo (para alertas)
+8. Guardar
+
+6.2 CREAR UNA FACTURA
+-----------------------
+1. Ir a Facturas > Nueva Factura
+2. Seleccionar cliente (opcional)
+3. Agregar productos buscando por código o nombre
+4. Ajustar cantidades
+5. Aplicar descuento si es necesario
+6. Agregar propina si aplica
+7. Seleccionar método de pago
+8. Confirmar y facturar
+9. Imprimir o enviar por WhatsApp
+
+6.3 REGISTRAR UNA DEVOLUCIÓN
+-------------------------------
+1. Ir a Devoluciones > Nueva Devolución
+2. Seleccionar factura original
+3. Seleccionar productos a devolver
+4. Ingresar cantidad
+5. Guardar (stock se restaura automáticamente)
+
+6.4 CUADRAR LA CAJA
+---------------------
+1. Ir a Caja > Cuadrar Caja (Detalle)
+2. Contar efectivo por denominaciones:
+   - Billetes de C$1, C$5, C$10, C$25, C$50, C$100, C$500, C$1,000
+3. El sistema calcula automáticamente:
+   - Total contado
+   - Diferencia (sobra/falta)
+4. Agregar notas si es necesario
+5. Cerrar caja
+
+6.5 CREAR PLAN DE CRÉDITO A PLAZOS
+-------------------------------------
+1. Crear factura con método de pago "Crédito"
+2. Ir a la factura creada
+3. Presionar "Plan de Cuotas"
+4. Definir número de cuotas y frecuencia
+5. Guardar
+6. Registrar pagos desde el plan
+
+6.6 VER KARDEX
+----------------
+1. Ir a Kardex
+2. Seleccionar producto (opcional)
+3. Ver historial de movimientos:
+   - Entradas (compras, devoluciones)
+   - Salidas (ventas)
+   - Ajustes
+
+6.7 GENERAR ALERTAS
+---------------------
+1. Ir a Alertas
+2. Presionar "Generar Alertas"
+3. El sistema busca automáticamente:
+   - Productos con stock bajo
+   - Productos por vencer
+   - Cuotas vencidas
+
+6.8 EXPORTAR DATOS
+--------------------
+1. Ir a Configuración
+2. Seleccionar qué exportar:
+   - Productos (CSV)
+   - Clientes (CSV)
+   - Facturas (CSV con filtro de fechas)
+3. Se descarga archivo CSV
+4. Abrir en Excel
+
+================================================================================
+               7. EMPAQUETADO (.exe / .app)
+================================================================================
+
+7.1 PARA macOS (.app)
+-----------------------
+1. Ir a la carpeta del proyecto
+2. Ejecutar:
+   ./build_macos.sh
+3. Se genera: dist/CherryInventario.app
+4. Doble clic para ejecutar
+5. Si macOS bloquea: Click derecho > Abrir
+
+7.2 PARA WINDOWS (.exe)
+-------------------------
+1. Copiar la carpeta CHERRY a una PC con Windows
+2. Doble clic en build_windows.bat
+3. Se genera: dist\CherryInventario\CherryInventario.exe
+4. Ejecutar el .exe
+
+7.3 NOTAS IMPORTANTES
+-----------------------
+- PyInstaller NO puede cross-compilear
+- El .exe de Windows se debe compilar EN Windows
+- El .app de macOS se debe compilar EN macOS
+- Tamaño aproximado: 29 MB
+
+================================================================================
+       8. SISTEMA DE ACTUALIZACIONES CON GITHUB
+================================================================================
+
+8.1 CONFIGURACIÓN INICIAL
+---------------------------
+1. Crear repositorio en GitHub:
+   https://github.com/new
+   Nombre: CHERRY
+
+2. Subir el código:
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin https://github.com/DELIVERYEXPRESS25/CHERRY.git
+   git push -u origin main
+
+8.2 PUBLICAR UNA ACTUALIZACIÓN
+--------------------------------
+OPCIÓN A: Usar el script (recomendado)
+---------------------------------------
+python github_release.py 1.1.0 "Corregido bug en facturas" "Nuevo reporte DGI"
+
+El script automáticamente:
+1. Crea el archivo .zip con los cambios
+2. Hace git commit y push
+3. Crea el tag v1.1.0
+4. Muestra instrucciones para crear el release
+
+OPCIÓN B: Manual
+-----------------
+1. Hacer cambios en el código
+2. Actualizar version.txt
+3. git add .
+4. git commit -m "Release v1.1.0"
+5. git tag v1.1.0
+6. git push --tags
+7. Ir a GitHub > Releases > New Release
+8. Seleccionar tag v1.1.0
+9. Subir el archivo .zip como Asset
+10. Publicar
+
+8.3 CÓMO FUNCIONA EN LOS CLIENTES
+-------------------------------------
+1. El admin abre la app
+2. Va a Menú > Actualizaciones
+3. Presiona "Verificar Ahora"
+4. El sistema consulta la API de GitHub
+5. Si hay nueva versión:
+   - Muestra descripción y cambios
+   - Presiona "Descargar Actualización"
+   - Se descarga e instala automáticamente
+   - La app se reinicia
+
+8.4 FLUJO TÉCNICO
+--------------------
+1. La app llama a:
+   https://api.github.com/repos/DELIVERYEXPRESS25/CHERRY/releases/latest
+
+2. Compara la versión del tag (ej: "1.1.0") con la versión actual
+
+3. Si hay actualización, busca el Asset .zip en el release
+
+4. Descarga el .zip y extrae los archivos
+
+5. Actualiza version.txt con la nueva versión
+
+6. Reinicia la aplicación
+
+================================================================================
+                  9. SOLUCIÓN DE PROBLEMAS
+================================================================================
+
+PROBLEMA: "Connection refused" al abrir http://127.0.0.1:5000
+--------------------------------------------------------------
+SOLUCIÓN: El servidor no está corriendo. Ejecutar:
+python app.py
+
+PROBLEMA: "TemplateNotFound: login.html"
+-----------------------------------------
+SOLUCIÓN: Faltan los archivos de templates. Verificar que la carpeta
+templates/ existe y contiene todos los archivos .html
+
+PROBLEMA: "Object of type Product is not JSON serializable"
+------------------------------------------------------------
+SOLUCIÓN: Los productos se pasan como objetos SQLAlchemy a Jinja2.
+Se debe convertir a diccionarios en la ruta antes de renderizar.
+
+PROBLEMA: "'now' is undefined" en templates
+--------------------------------------------
+SOLUCIÓN: Falta el context processor. Ya está agregado en app.py:
+app.jinja_env.globals.update(now=datetime.now)
+
+PROBLEMA: "module 'hashlib' has no attribute 'pbkdf2_hmac'"
+------------------------------------------------------------
+SOLUCIÓN: PyInstaller no incluye la extensión C de hashlib.
+Se resolvió usando hashing puro con Python (simple_hash).
+
+PROBLEMA: macOS bloquea la app compilada
+-----------------------------------------
+SOLUCIÓN: Click derecho en CherryInventario.app > Abrir > Abrir
+
+PROBLEMA: No se puede compilar .exe desde macOS
+-------------------------------------------------
+SOLUCIÓN: PyInstaller no soporta cross-compile.
+Se debe compilar en una PC con Windows.
+
+PROBLEMA: Error 404 al verificar actualizaciones
+--------------------------------------------------
+SOLUCIÓN: No hay releases en GitHub. Crear el primer release
+siguiendo las instrucciones de la sección 8.2.
+
+================================================================================
+                  10. ARCHIVOS IMPORTANTES
+================================================================================
+
+app.py                    -> Archivo principal (2454 líneas)
+                            Contiene: modelos, rutas, lógica de negocio
+
+requirements.txt          -> Dependencias:
+                            Flask 3.0.0
+                            Flask-SQLAlchemy
+                            Flask-Login
+                            psycopg2-binary
+
+updater.py                -> Auto-actualizador
+                            Verifica GitHub releases
+                            Descarga e instala actualizaciones
+
+github_release.py         -> Script para crear releases
+                            Crea .zip, git tag, push
+
+build_windows.bat         -> Compilar .exe en Windows
+build_macos.sh            -> Compilar .app en macOS
+
+instance/
+  cherry_inventory.db     -> Base de datos SQLite
+                            Se crea automáticamente al ejecutar
+
+================================================================================
+                         FIN DE DOCUMENTACIÓN
+================================================================================
+
+Cherry Inventario v1.0.0
+Desarrollado para negocios en Nicaragua
+GitHub: https://github.com/DELIVERYEXPRESS25/CHERRY
+
+================================================================================

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Ganancias{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-dollar-sign"></i> Reporte de Ganancias</h1>
+    <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir</button>
+</div>
+<div class="filters">
+    <form method="GET" class="filter-form">
+        <div class="form-group"><label>Desde</label><input type="date" name="start" value="{{ start_date }}"></div>
+        <div class="form-group"><label>Hasta</label><input type="date" name="end" value="{{ end_date }}"></div>
+        <button type="submit" class="btn"><i class="fas fa-filter"></i> Filtrar</button>
+    </form>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-arrow-up"></i></div><div class="stat-info"><h3>{{ format_currency(total_revenue) }}</h3><p>Ingresos Totales</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-arrow-down"></i></div><div class="stat-info"><h3>{{ format_currency(product_costs) }}</h3><p>Costo de Productos</p></div></div>
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-percentage"></i></div><div class="stat-info"><h3>{{ format_currency(total_tax) }}</h3><p>ISV Cobrado</p></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-chart-line"></i></div><div class="stat-info"><h3>{{ format_currency(profit) }}</h3><p>Ganancia Neta</p></div></div>
+</div>
+<div class="card">
+    <div class="card-header"><h3><i class="fas fa-chart-pie"></i> Resumen de Rentabilidad</h3></div>
+    <div class="card-body">
+        <div class="payment-summary">
+            <div class="payment-item">
+                <div class="payment-icon cash"><i class="fas fa-chart-line"></i></div>
+                <div class="payment-info">
+                    <span class="payment-label">Margen de Ganancia</span>
+                    <span class="payment-amount">{{ "%.1f"|format(margin) }}%</span>
+                </div>
+            </div>
+            <div class="payment-item">
+                <div class="payment-icon card"><i class="fas fa-balance-scale"></i></div>
+                <div class="payment-info">
+                    <span class="payment-label">Relación Ingresos/Costos</span>
+                    <span class="payment-amount">
+                        {% if product_costs > 0 %}{{ "%.2f"|format(total_revenue / product_costs) }}x{% else %}N/A{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

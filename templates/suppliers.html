@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Proveedores - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-truck"></i> Proveedores</h1>
+    <a href="{{ url_for('add_supplier') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar</a>
+</div>
+<div class="filters">
+    <form method="GET" class="filter-form">
+        <div class="form-group"><input type="text" name="search" value="{{ search }}" placeholder="Buscar proveedor..."></div>
+        <button type="submit" class="btn"><i class="fas fa-search"></i> Buscar</button>
+    </form>
+</div>
+<div class="card"><div class="card-body">
+    {% if suppliers %}
+    <table class="data-table">
+        <thead><tr><th>Nombre</th><th>Contacto</th><th>Teléfono</th><th>RUC</th><th>Saldo</th><th>Acciones</th></tr></thead>
+        <tbody>
+            {% for s in suppliers %}
+            <tr>
+                <td><a href="{{ url_for('supplier_detail', id=s.id) }}">{{ s.name }}</a></td>
+                <td>{{ s.contact_name or '-' }}</td>
+                <td>{{ s.phone or '-' }}</td>
+                <td>{{ s.ruc or '-' }}</td>
+                <td>{{ format_currency(s.balance) }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('edit_supplier', id=s.id) }}" class="btn btn-sm btn-info"><i class="fas fa-edit"></i></a>
+                    <a href="{{ url_for('delete_supplier', id=s.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?')"><i class="fas fa-trash"></i></a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay proveedores</p>{% endif %}
+</div></div>
+{% endblock %}

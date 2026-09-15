@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Detalle Plan de Crédito #{{ plan.id }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-calendar-alt"></i> Plan de Crédito #{{ plan.id }}</h1>
+    <a href="{{ url_for('installments') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div><div class="stat-info"><h3>{{ format_currency(plan.total_amount) }}</h3><p>Total Factura</p></div></div>
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-check"></i></div><div class="stat-info"><h3>{{ format_currency(plan.paid_amount) }}</h3><p>Pagado</p></div></div>
+    <div class="stat-card"><div class="stat-icon red"><i class="fas fa-clock"></i></div><div class="stat-info"><h3>{{ format_currency(plan.remaining_amount) }}</h3><p>Pendiente</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-calculator"></i></div><div class="stat-info"><h3>{{ plan.payments|length }}/{{ plan.num_installments }}</h3><p>Cuotas Pagadas</p></div></div>
+</div>
+<div class="card"><div class="card-header"><h3><i class="fas fa-info-circle"></i> Detalle</h3></div><div class="card-body">
+    <p><strong>Factura:</strong> {{ plan.invoice.invoice_number if plan.invoice else '-' }}</p>
+    <p><strong>Cliente:</strong> {{ plan.customer.name if plan.customer else '-' }}</p>
+    <p><strong>Frecuencia:</strong> {{ plan.frequency }}</p>
+    <p><strong>Monto por Cuota:</strong> {{ format_currency(plan.installment_amount) }}</p>
+    <p><strong>Estado:</strong> <span class="badge badge-{% if plan.status == 'active' %}warning{% else %}success{% endif %}">{{ 'Activo' if plan.status == 'active' else 'Completado' }}</span></p>
+</div></div>
+{% if plan.status == 'active' %}
+<div class="card" style="margin-bottom:20px"><div class="card-header"><h3><i class="fas fa-money-bill-wave"></i> Registrar Pago</h3></div><div class="card-body">
+    <form method="POST" action="{{ url_for('pay_installment', id=plan.id) }}" style="display:flex;gap:15px;align-items:flex-end">
+        <div class="form-group" style="margin:0"><label>Monto (C$)</label><input type="number" name="amount" step="0.01" min="0.01" max="{{ plan.remaining_amount }}" value="{{ plan.installment_amount }}" required></div>
+        <div class="form-group" style="margin:0;flex:1"><label>Notas</label><input type="text" name="notes" placeholder="Observaciones"></div>
+        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Registrar Pago</button>
+    </form>
+</div></div>
+{% endif %}
+<div class="card"><div class="card-header"><h3><i class="fas fa-history"></i> Pagos Realizados</h3></div><div class="card-body">
+    {% if payments %}
+    <table class="data-table">
+        <thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Notas</th></tr></thead>
+        <tbody>
+            {% for p in payments %}
+            <tr><td>{{ p.installment_number }}</td><td>{{ p.payment_date.strftime('%d/%m/%Y') }}</td><td class="text-success"><strong>{{ format_currency(p.amount) }}</strong></td><td>{{ p.notes or '-' }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="no-data">No hay pagos registrados</p>{% endif %}
+</div></div>
+{% endblock %}

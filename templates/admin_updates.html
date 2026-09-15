@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Actualizaciones - Cherry Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fab fa-github"></i> Centro de Actualizaciones</h1>
+    <a href="https://github.com/{{ github_repo }}/releases" target="_blank" class="btn btn-primary">
+        <i class="fab fa-github"></i> Ver Releases en GitHub
+    </a>
+</div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-info-circle"></i></div>
+        <div class="stat-info">
+            <h3>{{ current_version }}</h3>
+            <p>Versión Actual</p>
+        </div>
+    </div>
+    <div class="stat-card" id="update-status">
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+            <h3 id="latest-version">Verificando...</h3>
+            <p>Última Versión</p>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-sync"></i> Verificar Actualizaciones</h3>
+        <button class="btn btn-primary" onclick="checkForUpdates()">
+            <i class="fas fa-sync"></i> Verificar Ahora
+        </button>
+    </div>
+    <div class="card-body">
+        <div id="update-result" style="display:none">
+            <div id="update-available" style="display:none">
+                <div style="background:#d4edda;border:1px solid #28a745;border-radius:8px;padding:20px;margin-bottom:20px">
+                    <h4 style="color:#28a745;margin:0 0 10px"><i class="fas fa-download"></i> Nueva Versión Disponible</h4>
+                    <p id="update-description"></p>
+                    <p style="margin-top:15px">
+                        <strong>Versión:</strong> <span id="update-version"></span> |
+                        <strong>Fecha:</strong> <span id="update-date"></span>
+                    </p>
+                    <div style="margin-top:15px">
+                        <a id="download-btn" href="#" target="_blank" class="btn btn-success">
+                            <i class="fas fa-download"></i> Descargar Actualización
+                        </a>
+                        <a id="release-btn" href="#" target="_blank" class="btn">
+                            <i class="fab fa-github"></i> Ver Release
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div id="no-update" style="display:none">
+                <div style="background:#d1ecf1;border:1px solid #17a2b8;border-radius:8px;padding:20px">
+                    <h4 style="color:#17a2b8;margin:0"><i class="fas fa-check-circle"></i> Tienes la última versión</h4>
+                </div>
+            </div>
+            <div id="update-error" style="display:none">
+                <div style="background:#f8d7da;border:1px solid #dc3545;border-radius:8px;padding:20px">
+                    <h4 style="color:#dc3545;margin:0"><i class="fas fa-exclamation-triangle"></i> Error</h4>
+                    <p id="error-message"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-book"></i> Cómo Publicar Actualizaciones</h3>
+    </div>
+    <div class="card-body">
+        <div style="background:#f8f9fa;padding:20px;border-radius:8px;font-family:monospace">
+            <p><strong>1. Crear release con el script:</strong></p>
+            <code>python github_release.py 1.1.0 "Cambios aquí"</code>
+            <br><br>
+            <p><strong>2. O manualmente:</strong></p>
+            <code>git tag v1.1.0</code><br>
+            <code>git push --tags</code><br>
+            <br>
+            <p><strong>3. Ir a GitHub y crear release:</strong></p>
+            <code>https://github.com/{{ github_repo }}/releases/new</code>
+            <br><br>
+            <p><strong>4. Subir el archivo .zip como Asset</strong></p>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Historial de Releases</h3>
+    </div>
+    <div class="card-body">
+        <a href="https://github.com/{{ github_repo }}/releases" target="_blank" class="btn">
+            <i class="fab fa-github"></i> Ver todos los releases en GitHub
+        </a>
+    </div>
+</div>
+<script>
+function checkForUpdates() {
+    document.getElementById('update-result').style.display = 'block';
+    document.getElementById('update-available').style.display = 'none';
+    document.getElementById('no-update').style.display = 'none';
+    document.getElementById('update-error').style.display = 'none';
+    
+    fetch('/admin/updates/check')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('latest-version').textContent = data.latest_version || 'N/A';
+            
+            if (data.has_update) {
+                document.getElementById('update-available').style.display = 'block';
+                document.getElementById('update-version').textContent = data.latest_version;
+                document.getElementById('update-date').textContent = data.published_at ? new Date(data.published_at).toLocaleDateString() : 'N/A';
+                document.getElementById('update-description').textContent = data.description || '';
+                
+                if (data.download_url) {
+                    document.getElementById('download-btn').href = data.download_url;
+                    document.getElementById('download-btn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('download-btn').style.display = 'none';
+                }
+                
+                if (data.html_url) {
+                    document.getElementById('release-btn').href = data.html_url;
+                }
+            } else if (data.error) {
+                document.getElementById('update-error').style.display = 'block';
+                document.getElementById('error-message').textContent = data.error;
+            } else {
+                document.getElementById('no-update').style.display = 'block';
+            }
+        })
+        .catch(err => {
+            document.getElementById('update-error').style.display = 'block';
+            document.getElementById('error-message').textContent = err.message;
+        });
+}
+</script>
+{% endblock %}

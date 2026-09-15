@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Facturas - Cherry Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-file-invoice-dollar"></i> Facturas</h1>
+    <a href="{{ url_for('new_invoice') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nueva Factura
+    </a>
+</div>
+
+<div class="filters">
+    <form method="GET" class="filter-form">
+        <div class="form-group">
+            <input type="text" name="search" value="{{ search }}" placeholder="Buscar por número o cliente...">
+        </div>
+        <div class="form-group">
+            <select name="status">
+                <option value="">Todos los estados</option>
+                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completada</option>
+                <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pendiente</option>
+                <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelada</option>
+            </select>
+        </div>
+        <button type="submit" class="btn"><i class="fas fa-search"></i> Buscar</button>
+        <a href="{{ url_for('invoices') }}" class="btn"><i class="fas fa-times"></i> Limpiar</a>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if invoices %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>N° Factura</th>
+                    <th>Cliente</th>
+                    <th>Subtotal</th>
+                    <th>ISV (15%)</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr class="{% if invoice.status == 'cancelled' %}cancelled-row{% endif %}">
+                    <td><strong>{{ invoice.invoice_number }}</strong></td>
+                    <td>{{ invoice.customer.name }}</td>
+                    <td>{{ format_currency(invoice.subtotal) }}</td>
+                    <td>{{ format_currency(invoice.tax_amount) }}</td>
+                    <td><strong>{{ format_currency(invoice.total) }}</strong></td>
+                    <td>
+                        {% if invoice.status == 'completed' %}
+                        <span class="badge badge-success">Completada</span>
+                        {% elif invoice.status == 'pending' %}
+                        <span class="badge badge-warning">Pendiente</span>
+                        {% else %}
+                        <span class="badge badge-danger">Cancelada</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ invoice.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('view_invoice', id=invoice.id) }}" class="btn btn-sm btn-info">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">No se encontraron facturas</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Preguntas Frecuentes{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-comments"></i> Preguntas Frecuentes</h1>
+    <a href="{{ url_for('help_center') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+<div class="faq-list">
+    {% for faq in faqs %}
+    <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+            <h4>{{ faq.q }}</h4>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+            <p>{{ faq.a }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<style>
+.faq-list { max-width: 800px; }
+.faq-item { background: white; border: 1px solid #e9ecef; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.faq-question { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; transition: background 0.2s; }
+.faq-question:hover { background: #f8f9fa; }
+.faq-question h4 { margin: 0; font-size: 15px; color: #333; }
+.faq-question i { color: #999; transition: transform 0.3s; }
+.faq-item.open .faq-question i { transform: rotate(180deg); }
+.faq-answer { padding: 0 20px; max-height: 0; overflow: hidden; transition: all 0.3s; }
+.faq-item.open .faq-answer { padding: 0 20px 20px; max-height: 500px; }
+.faq-answer p { margin: 0; color: #555; line-height: 1.6; }
+</style>
+{% endblock %}

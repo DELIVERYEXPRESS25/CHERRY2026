@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{% if product %}Editar{% else %}Agregar{% endif %} Producto - Cherry Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-box"></i> {% if product %}Editar{% else %}Agregar{% endif %} Producto</h1>
+    <a href="{{ url_for('products') }}" class="btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="code">Código *</label>
+                    <input type="text" id="code" name="code" value="{{ product.code if product else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">Nombre *</label>
+                    <input type="text" id="name" name="name" value="{{ product.name if product else '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Descripción</label>
+                <textarea id="description" name="description" rows="3">{{ product.description if product else '' }}</textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="purchase_price">Precio de Compra (C$) *</label>
+                    <input type="number" id="purchase_price" name="purchase_price" step="0.01" min="0" value="{{ product.purchase_price if product else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="sale_price">Precio de Venta (C$) *</label>
+                    <input type="number" id="sale_price" name="sale_price" step="0.01" min="0" value="{{ product.sale_price if product else '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="stock">Stock Actual *</label>
+                    <input type="number" id="stock" name="stock" min="0" value="{{ product.stock if product else '0' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="min_stock">Stock Mínimo</label>
+                    <input type="number" id="min_stock" name="min_stock" min="0" value="{{ product.min_stock if product else '5' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category">Categoría</label>
+                    <input type="text" id="category" name="category" value="{{ product.category if product else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="unit">Unidad</label>
+                    <select id="unit" name="unit">
+                        <option value="Unidad" {% if product and product.unit == 'Unidad' %}selected{% endif %}>Unidad</option>
+                        <option value="Kg" {% if product and product.unit == 'Kg' %}selected{% endif %}>Kilogramo</option>
+                        <option value="Litro" {% if product and product.unit == 'Litro' %}selected{% endif %}>Litro</option>
+                        <option value="Metro" {% if product and product.unit == 'Metro' %}selected{% endif %}>Metro</option>
+                        <option value="Paquete" {% if product and product.unit == 'Paquete' %}selected{% endif %}>Paquete</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="supplier_id">Proveedor</label>
+                    <select id="supplier_id" name="supplier_id">
+                        <option value="">Sin proveedor</option>
+                        {% for s in suppliers %}
+                        <option value="{{ s.id }}" {% if product and product.supplier_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <div style="display:flex;gap:20px;padding-top:10px">
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+                            <input type="checkbox" name="has_batch" {% if product and product.has_batch %}checked{% endif %}> Maneja lotes
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+                            <input type="checkbox" name="has_expiry" {% if product and product.has_expiry %}checked{% endif %}> Tiene vencimiento
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            {% if product and product.has_batch %}
+            <div class="form-actions" style="margin-bottom:20px">
+                <a href="{{ url_for('product_batches', id=product.id) }}" class="btn btn-secondary"><i class="fas fa-layer-group"></i> Ver Lotes</a>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> {% if product %}Actualizar{% else %}Guardar{% endif %}
+                </button>
+                <a href="{{ url_for('products') }}" class="btn">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
