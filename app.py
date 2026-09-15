@@ -26,10 +26,7 @@ else:
     STATIC_DIR = os.path.join(APP_DIR, 'static')
 
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
-print(f"Template dir: {TEMPLATE_DIR}")
-print(f"Static dir: {STATIC_DIR}")
-print(f"Templates exist: {os.path.exists(TEMPLATE_DIR)}")
-print(f"dashboard.html exists: {os.path.exists(os.path.join(TEMPLATE_DIR, 'dashboard.html'))}")
+app.config['SECRET_KEY'] = 'cherry-inventory-secret-key-2024'
 
 if getattr(sys, 'frozen', False):
     DB_PATH = os.path.join(BASE_DIR, 'cherry_inventory.db')
