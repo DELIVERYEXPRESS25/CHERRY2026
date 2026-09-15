@@ -1,8 +1,11 @@
 import os
+import sys
 import sqlite3
 import shutil
 import hashlib
 import base64
+import webbrowser
+import threading
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -2544,6 +2547,13 @@ def init_db():
             db.session.commit()
             print("Usuarios creados: admin/admin123 y cajero/cajero123")
 
+def open_browser():
+    webbrowser.open('http://127.0.0.1:5000')
+
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5000)
+    if getattr(sys, 'frozen', False):
+        threading.Timer(1.5, open_browser).start()
+        app.run(host='127.0.0.1', port=5000, debug=False)
+    else:
+        app.run(debug=True, port=5000)
